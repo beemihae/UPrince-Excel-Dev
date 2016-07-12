@@ -18,7 +18,7 @@
             $(document).on("click", "#btnSignIn", function () {
                 //app.showNotification(JSON.stringify(bowser, null, '    '));
                 var x = document.getElementById("email");
-                var email = x.elements[0].value; 
+                var email = x.elements[0].value;
                 if (email.length != 0) {
                     sessionStorage.setItem("email", email);
                     //window.location.href = "project-page.html"
@@ -111,18 +111,6 @@
                 loadListProjects(projectSearch);
                 previous = x.length;
             });
-
-            $(document).on("click", "#createSheet", function () {
-                Excel.run(function (ctx) {
-                    ctx.workbook.worksheets.add("Values");
-                    return ctx.sync().then(function () {
-                        app.showNotification("Success! Worksheet created with a random name.");
-                    });
-                }).catch(function (error) {
-                    app.showNotification(error);
-                });
-            });
-
         });
     };
 
@@ -320,5 +308,7 @@
             //app.showNotification('Error', asyncResult.error.message);
         }
     };
+
+
 
 })();

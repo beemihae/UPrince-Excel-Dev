@@ -280,7 +280,7 @@ var app = (function () {
                       }
                   }
                   else {
-                      var matrix = [["", "", "", "", "", "", "",""]]
+                      var matrix = [["", "", "", "", "", "", "", ""]]
                   }
                   sessionStorage.setItem("IRId", IRId);
                   var issueRegister = new Office.TableData();
@@ -634,86 +634,7 @@ var app = (function () {
         }); //to do
 
         $(document).on("click", '#RiskRegister', function () {
-            var projectId = sessionStorage.getItem('projectId');
-            var urlProject = host + '/api/RiskRegister/GetRiskRegister';
-            var dataEmail = {
-                "projectId": projectId,
-                "identifier": "",
-                "title": "",
-                "riskStatus": {
-                    "All": true,
-                    "New": false,
-                    "Active": false,
-                    "Closed": false
-                },
-                "riskType": {
-                    "All": true,
-                    "Threat": false,
-                    "Opportunity": false
-                },
-                "dateRegistered": "",
-                "riskOwner": "",
-                "sortField": "id",
-                "sortOrder": "ASC"
-            }
-
-            $.ajax({
-                type: "POST",
-                url: urlProject,
-                dataType: "json",
-                contentType: "application/json; charset=utf-8",
-                data: JSON.stringify(dataEmail),
-            })
-              .done(function (str) {
-                  var length = Object.keys(str).length;
-                  var RRId = [length];
-                  if (length > 0) {
-                      var matrix = [length];
-                      for (var i = 0; i < length; i++) {
-                          matrix[i] = [6];
-                          RRId[i] = str[i].id;
-                          matrix[i][0] = isNull(str[i].title);
-                          matrix[i][1] = isNull(str[i].identifier);
-                          matrix[i][2] = isNull(str[i].riskStatus);
-                          matrix[i][3] = isNull(str[i].riskType);
-                          matrix[i][4] = formatDate(str[i].dateRegistered);
-                          matrix[i][5] = isNull(str[i].riskOwner);
-                      }
-                  }
-                  else {
-                      var matrix = [["", "", "", "", "", ""]]
-                  }
-                  sessionStorage.setItem("RRId", RRId);
-                  var riskRegister = new Office.TableData();
-                  riskRegister.headers = ["Risk Title", "Risk ID", "Status", "Risk Type", "Date", "Risk Owner"];
-                  riskRegister.rows = matrix;
-                  // Set the myTable in the document.
-                  Office.context.document.setSelectedDataAsync(
-                    riskRegister,
-                    {
-                        coercionType: Office.CoercionType.Table, cellFormat: [{ cells: Office.Table.All, format: { width: "auto fit" } }, { cells: { column: 4 }, format: { numberFormat: "dd-mm-yyyy" } }
-                        ]
-                    },
-                    function (asyncResult) {
-                        if (asyncResult.status == "failed") {
-                            //showMessage("Action failed with error: " + asyncResult.error.message);
-                        } else {
-                            //showMessage("Check out your new table, then click next to learn another API call.");
-                        }
-                    }
-                  );
-
-                  Office.context.document.bindings.addFromSelectionAsync(
-                       Office.BindingType.Table,
-                               { id: "riskRegister" },
-                       function (asyncResult) {
-                           if (asyncResult.status == "failed") {
-                               //showMessage("Action failed with error: " + asyncResult.error.message);
-                           } else {
-                               //app.showNotification('Binding done');
-                           }
-                       });
-              });
+            riskRegisterGET();
         });
 
         $(document).on("click", "#Refresh", function () {
@@ -741,6 +662,19 @@ var app = (function () {
             publishIssueRegister();
             publishLessonLog();
         });
+
+        $(document).on("click", "#createSheet", function () {
+            Excel.run(function (ctx) {
+                ctx.workbook.worksheets.add("Values");
+                return ctx.sync().then(function () {
+                    app.showNotification("Success! Sheet created");
+                    riskRegisterGET();
+                });
+            }).catch(function (error) {
+                app.showNotification(error);
+            });
+        });
+
     };
     function isNull(param) {
         if (param == null) return '';
@@ -1083,6 +1017,114 @@ var app = (function () {
 
         })
     }
+
+    function riskRegisterGET() {
+        var projectId = sessionStorage.getItem('projectId');
+        var urlProject = host + '/api/RiskRegister/GetRiskRegister';
+        var dataEmail = {
+            "projectId": projectId,
+            "identifier": "",
+            "title": "",
+            "riskStatus": {
+                "All": true,
+                "New": false,
+                "Active": false,
+                "Closed": false
+            },
+            "riskType": {
+                "All": true,
+                "Threat": false,
+                "Opportunity": false
+            },
+            "dateRegistered": "",
+            "riskOwner": "",
+            "sortField": "id",
+            "sortOrder": "ASC"
+        }
+
+        $.ajax({
+            type: "POST",
+            url: urlProject,
+            dataType: "json",
+            contentType: "application/json; charset=utf-8",
+            data: JSON.stringify(dataEmail),
+        })
+          .done(function (str) {
+              var length = Object.keys(str).length;
+              var RRId = [length];
+              if (length > 0) {
+                  var matrix = [length];
+                  for (var i = 0; i < length; i++) {
+                      matrix[i] = [6];
+                      RRId[i] = str[i].id;
+                      matrix[i][0] = isNull(str[i].title);
+                      matrix[i][1] = isNull(str[i].identifier);
+                      matrix[i][2] = isNull(str[i].riskStatus);
+                      matrix[i][3] = isNull(str[i].riskType);
+                      matrix[i][4] = formatDate(str[i].dateRegistered);
+                      matrix[i][5] = isNull(str[i].riskOwner);
+                  }
+              }
+              else {
+                  var matrix = [["", "", "", "", "", ""]]
+              }
+              sessionStorage.setItem("RRId", RRId);
+              var riskRegister = new Office.TableData();
+              riskRegister.headers = ["Risk Title", "Risk ID", "Status", "Risk Type", "Date", "Risk Owner"];
+              riskRegister.rows = matrix;
+              // Set the myTable in the document.
+              Office.context.document.setSelectedDataAsync(
+                riskRegister,
+                {
+                    coercionType: Office.CoercionType.Table, cellFormat: [{ cells: Office.Table.All, format: { width: "auto fit" } }, { cells: { column: 4 }, format: { numberFormat: "dd-mm-yyyy" } }
+                    ]
+                },
+                function (asyncResult) {
+                    if (asyncResult.status == "failed") {
+                        //showMessage("Action failed with error: " + asyncResult.error.message);
+                    } else {
+                        //showMessage("Check out your new table, then click next to learn another API call.");
+                    }
+                }
+              );
+
+              Office.context.document.bindings.addFromSelectionAsync(
+                   Office.BindingType.Table,
+                           { id: "riskRegister" },
+                   function (asyncResult) {
+                       if (asyncResult.status == "failed") {
+                           //showMessage("Action failed with error: " + asyncResult.error.message);
+                       } else {
+                           //app.showNotification('Binding done');
+                       }
+                   }
+              );
+              getRiskRegister(projectId, str[0].id);
+          });
+    };
+
+    function getRiskRegister(projectId, riskId) {
+        var urlProject = host + '/api/RiskRegister/GetRiskRegisterEntry?riskId=' + riskId + '&projectId=' + projectId;
+        $.ajax({
+            type: 'GET',
+            url: urlProject,
+            dataType: "json",
+            contentType: "application/json; charset=utf-8",
+
+        })
+         .done(function (str) {
+             app.showNotification(str.impact[0].State);
+             Excel.run(function (ctx) {
+                 ctx.workbook.worksheets.getItem('Values').getRange("A1:A" + Object.keys(str.impact).length).values = [[1], [2], [1], [2], [1]] /*str.impact[0].State*/;
+                 //ctx.workbook.worksheets.getItem('Values').activate();
+                 return ctx.sync().then(function () {
+                     console.log("Success! Insert range in A1:C3.");
+                 });;
+             }).catch(function (error) {
+                 console.log(error);
+             });
+         })
+    };
 
     return app;
 })();

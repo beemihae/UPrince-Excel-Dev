@@ -1115,8 +1115,10 @@ var app = (function () {
          .done(function (str) {
              app.showNotification(str.impact[0].State);
              Excel.run(function (ctx) {
-                 ctx.workbook.worksheets.getItem('Values').getRange("A1:A" + Object.keys(str.impact).length).values = [[1], [2], [1], [2], [1]] /*str.impact[0].State*/;
+                 var matrix = riskValues(str);
+                 ctx.workbook.worksheets.getItem('Values').getRange("A1:A" + Object.keys(str.impact).length).values = matrix/*[[1], [2], [1], [2], [1]] //str.impact[0].State*/;
                  //ctx.workbook.worksheets.getItem('Values').activate();
+                 app.showNotification(riskValues(str).length)
                  return ctx.sync().then(function () {
                      console.log("Success! Insert range in A1:C3.");
                  });;
@@ -1124,6 +1126,17 @@ var app = (function () {
                  console.log(error);
              });
          })
+    };
+
+    function riskValues(str) {
+        var val = [Object.keys(str.impact).length];
+        for (var i = 0; i < Object.keys(str.impact).length; i++) {
+            val[i] = [1];
+            val[i][0] = str.impact[i].State;
+            //val[i] = str.impact[i].State;
+        }
+        //app.showNotification(val[2][0]);
+        return val;
     };
 
     return app;

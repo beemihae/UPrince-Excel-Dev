@@ -899,7 +899,7 @@ var app = (function () {
             var RRId = sessionStorage.getItem('RRId');
             var projectId = sessionStorage.getItem('projectId');
             var urlProject = host + '/api/RiskRegister/PostRiskRegisterHeader';
-            //var urlProject2 = host + '/api/RiskRegister/PostRiskRegisterImpact';
+            var urlProject2 = host + '/api/RiskRegister/PostRiskRegisterImpact';
             for (var i = 0; i < binding.length; i++) {
                 //app.showNotification(typeof projectId);
                 var dataEmail = {
@@ -924,7 +924,7 @@ var app = (function () {
                     data: JSON.stringify(dataEmail),
                 });
 
-                /*var dataEmail2 = {
+                var dataEmail2 = {
                     "riskEntryId": binding[i][1],
                     "impactInherent": sessionStorage.getItem('riskValuesImpact'+binding[i][6]),
                     "impactResidual": sessionStorage.getItem('riskValuesImpact' + binding[i][7]),
@@ -939,7 +939,7 @@ var app = (function () {
                     dataType: "json",
                     contentType: "application/json; charset=utf-8",
                     data: JSON.stringify(dataEmail2),
-                });*/
+                });
             }
 
         })

@@ -1055,7 +1055,7 @@ var app = (function () {
               if (length > 0) {
                   var matrix = [length];
                   for (var i = 0; i < length; i++) {
-                      matrix[i] = [6];
+                      matrix[i] = [12];
                       RRId[i] = str[i].id;
                       matrix[i][0] = isNull(str[i].title);
                       matrix[i][1] = isNull(str[i].identifier);
@@ -1063,14 +1063,36 @@ var app = (function () {
                       matrix[i][3] = isNull(str[i].riskType);
                       matrix[i][4] = formatDate(str[i].dateRegistered);
                       matrix[i][5] = isNull(str[i].riskOwner);
+                      var urlProject = host + '/api/RiskRegister/GetRiskRegisterEntry?riskId=' + str[i].id + '&projectId=' + projectId;
+                      $.ajax({
+                          type: 'GET',
+                          url: urlProject,
+                          async: false,
+                          dataType: "json",
+                          contentType: "application/json; charset=utf-8",
+                      })
+                       .done(function (anw) {
+                           //app.showNotification(anw.selectedImpactInherent);
+                           matrix[i][6] = isNull(anw.selectedImpactInherent);
+                           app.showNotification(matrix[i][6]);
+                           matrix[i][7] = isNull(anw.selectedImpactResidual);
+                           matrix[i][8] = isNull(anw.selectedProbabilityInherent);
+                           matrix[i][9] = isNull(anw.selectedProbabilityResidual);
+                           matrix[i][10] = isNull(anw.expectedValueInherent);
+                           matrix[i][11] = isNull(anw.expectedValueResidual);
+                           
+
+                       })
+
                   }
               }
               else {
-                  var matrix = [["", "", "", "", "", ""]]
-              }
+                  var matrix = [["", "", "", "", "", "","","","","","",""]]
+              };
+              //getRiskRegister(projectId, RRId[0]);
               sessionStorage.setItem("RRId", RRId);
               var riskRegister = new Office.TableData();
-              riskRegister.headers = ["Risk Title", "Risk ID", "Status", "Risk Type", "Date", "Risk Owner"];
+              riskRegister.headers = ["Risk Title", "Risk ID", "Status", "Risk Type", "Date", "Risk Owner", "Impact/Inherent", "Impact/Residual", "Probability/ Inherent", "Probability/ Residual", "Expected value Inherent", "Expected value Residual"];
               riskRegister.rows = matrix;
               // Set the myTable in the document.
               Office.context.document.setSelectedDataAsync(
@@ -1099,7 +1121,7 @@ var app = (function () {
                        }
                    }
               );
-              getRiskRegister(projectId, str[0].id);
+              //getRiskRegister(projectId, str[0].id);
           });
     };
 
@@ -1113,14 +1135,14 @@ var app = (function () {
 
         })
          .done(function (str) {
-             app.showNotification(str.impact[0].State);
+             //app.showNotification(str.impact[0].State);
              Excel.run(function (ctx) {
                  var matrix = riskValues(str);
                  ctx.workbook.worksheets.getItem('Values').getRange("A1:A" + Object.keys(str.impact).length).values = matrix/*[[1], [2], [1], [2], [1]] //str.impact[0].State*/;
                  //ctx.workbook.worksheets.getItem('Values').activate();
-                 app.showNotification(riskValues(str).length)
+                 //app.showNotification(riskValues(str).length)
                  return ctx.sync().then(function () {
-                     console.log("Success! Insert range in A1:C3.");
+                     //console.log("Success! Insert range in A1:C3.");
                  });;
              }).catch(function (error) {
                  console.log(error);

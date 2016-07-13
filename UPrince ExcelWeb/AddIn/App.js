@@ -659,8 +659,8 @@ var app = (function () {
             //publishCmdb();
             //publishDailyLog();
             publishRiskRegister();
-            publishIssueRegister();
-            publishLessonLog();
+            //publishIssueRegister();
+            //publishLessonLog();
         });
 
         $(document).on("click", "#createSheet", function () {
@@ -895,10 +895,12 @@ var app = (function () {
     function publishRiskRegister() {
         Office.select("bindings#riskRegister").getDataAsync({ coercionType: 'table' }, function (result) {
             var binding = result.value.rows;
+            //app.showNotification(binding[2][1]);
             var RRId = sessionStorage.getItem('RRId');
             var projectId = sessionStorage.getItem('projectId');
             var urlProject = host + '/api/RiskRegister/PostRiskRegisterHeader';
-            for (var i = 0; i < RRId.length; i++) {
+            //var urlProject2 = host + '/api/RiskRegister/PostRiskRegisterImpact';
+            for (var i = 0; i < binding.length; i++) {
                 //app.showNotification(typeof projectId);
                 var dataEmail = {
                     "id": binding[i][1],
@@ -920,7 +922,24 @@ var app = (function () {
                     dataType: "json",
                     contentType: "application/json; charset=utf-8",
                     data: JSON.stringify(dataEmail),
-                })
+                });
+
+                /*var dataEmail2 = {
+                    "riskEntryId": binding[i][1],
+                    "impactInherent": sessionStorage.getItem('riskValuesImpact'+binding[i][6]),
+                    "impactResidual": sessionStorage.getItem('riskValuesImpact' + binding[i][7]),
+                    "probabilityInherent": sessionStorage.getItem('riskValuesImpact' + binding[i][8]),
+                    "probabilityResidual": sessionStorage.getItem('riskValuesImpact' + binding[i][9]),
+                    "expectedInherent": "",
+                    "expectedResidual": ""
+                };
+                $.ajax({
+                    type: "POST",
+                    url: urlProject2,
+                    dataType: "json",
+                    contentType: "application/json; charset=utf-8",
+                    data: JSON.stringify(dataEmail2),
+                });*/
             }
 
         })
@@ -1074,25 +1093,25 @@ var app = (function () {
                        .done(function (anw) {
                            //app.showNotification(anw.selectedImpactInherent);
                            matrix[i][6] = isNull(anw.selectedImpactInherent);
-                           app.showNotification(matrix[i][6]);
+                           //app.showNotification(matrix[i][6]);
                            matrix[i][7] = isNull(anw.selectedImpactResidual);
                            matrix[i][8] = isNull(anw.selectedProbabilityInherent);
                            matrix[i][9] = isNull(anw.selectedProbabilityResidual);
                            matrix[i][10] = isNull(anw.expectedValueInherent);
                            matrix[i][11] = isNull(anw.expectedValueResidual);
-                           
+
 
                        })
 
                   }
               }
               else {
-                  var matrix = [["", "", "", "", "", "","","","","","",""]]
+                  var matrix = [["", "", "", "", "", "", "", "", "", "", "", ""]]
               };
-              //getRiskRegister(projectId, RRId[0]);
+              getRiskRegister(projectId, RRId[0]);
               sessionStorage.setItem("RRId", RRId);
               var riskRegister = new Office.TableData();
-              riskRegister.headers = ["Risk Title", "Risk ID", "Status", "Risk Type", "Date", "Risk Owner", "Impact/Inherent", "Impact/Residual", "Probability/ Inherent", "Probability/ Residual", "Expected value Inherent", "Expected value Residual"];
+              riskRegister.headers = ["Risk Title", "Risk ID", "Status", "Risk Type", "Date", "Risk Owner", "Impact/ \rInherent", "Impact/Residual", "Probability/ Inherent", "Probability/ Residual", "Expected value Inherent", "Expected value Residual"];
               riskRegister.rows = matrix;
               // Set the myTable in the document.
               Office.context.document.setSelectedDataAsync(
@@ -1137,8 +1156,9 @@ var app = (function () {
          .done(function (str) {
              //app.showNotification(str.impact[0].State);
              Excel.run(function (ctx) {
-                 var matrix = riskValues(str);
-                 ctx.workbook.worksheets.getItem('Values').getRange("A1:A" + Object.keys(str.impact).length).values = matrix/*[[1], [2], [1], [2], [1]] //str.impact[0].State*/;
+                 //var matrix = riskValuesImpact(str);
+                 ctx.workbook.worksheets.getItem('Values').getRange("C1:C" + Object.keys(str.impact).length).values = riskValuesImpact(str)/*[[1], [2], [1], [2], [1]] //str.impact[0].State*/;
+                 ctx.workbook.worksheets.getItem('Values').getRange("D1:D" + Object.keys(str.probability).length).values = riskValuesProb(str)/*[[1], [2], [1], [2], [1]] //str.impact[0].State*/;
                  //ctx.workbook.worksheets.getItem('Values').activate();
                  //app.showNotification(riskValues(str).length)
                  return ctx.sync().then(function () {
@@ -1150,11 +1170,25 @@ var app = (function () {
          })
     };
 
-    function riskValues(str) {
+    function riskValuesImpact(str) {
         var val = [Object.keys(str.impact).length];
         for (var i = 0; i < Object.keys(str.impact).length; i++) {
             val[i] = [1];
             val[i][0] = str.impact[i].State;
+            sessionStorage.setItem('riskValuesImpact' + str.impact[i].State, "" + str.impact[i].StateId);
+            //val[i] = str.impact[i].State;
+        }
+        //app.showNotification(val[2][0]);
+        return val;
+    };
+
+    function riskValuesProb(str) {
+        var val = [Object.keys(str.impact).length];
+        for (var i = 0; i < Object.keys(str.impact).length; i++) {
+            val[i] = [1];
+            val[i][0] = str.probability[i].State;
+            sessionStorage.setItem('riskValuesProb' + str.probability[i].State, "" + str.probability[i].StateId);
+
             //val[i] = str.impact[i].State;
         }
         //app.showNotification(val[2][0]);

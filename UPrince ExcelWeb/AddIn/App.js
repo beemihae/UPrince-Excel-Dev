@@ -638,7 +638,35 @@ var app = (function () {
         });
 
         $(document).on("click", "#Refresh", function () {
-            var table = new Office.TableData();
+            Excel.run(function (ctx) {
+                var binding = ctx.workbook.bindings.getItem("riskRegister");
+                var table = binding.getTable();
+                table.load('name');
+                return ctx.sync().then(function () {
+                    app.showNotification(binding.getTable().value.rows);
+                });
+            }).catch(function (error) {
+                console.log("Error: " + error);
+                if (error instanceof OfficeExtension.Error) {
+                    console.log("Debug info: " + JSON.stringify(error.debugInfo));
+                }
+            });
+            /*Office.select("bindings#riskRegister").getDataAsync({ coercionType: 'table' }, function (result) {
+                    var binding = result.value.rows;
+                    binding.getItemAt(3).delete();
+                });*/
+                /*Excel.run(function (ctx) {
+                    Office.select("bindings#riskRegister").getDataAsync({ coercionType: 'table' }, function (result) {
+                        var binding = result.value.rows;
+                        binding.getItemAt(3).delete();
+                    });
+                    return ctx.sync().then(function () {
+                        console.log("Success! Deleted the 4th row from 'MyTable' and shifts cells up.");
+                    });;
+                }).catch(function (error) {
+                    app.showNotification(error);
+                });*/
+            /*var table = new Office.TableData();
             //table.headers = ["a", "b", "a", "b", "a", "b"]
             table.rows = [["Seattle", "WA", "test1", "test2", "test3", "test4"], ["Seattle", "WA", "test1", "test2", "test3", "test4"]];
             //var table = [["Seattle", "WA", "test1", "test2", "test3", "test4"], ["Seattle", "WA", "test1", "test2", "test3", "test4"]];
@@ -652,7 +680,7 @@ var app = (function () {
                 binding.setDataAsync(table, { coercionType: "table", startRow: 2 });
                 binding.setDataAsync(table, { coercionType: "table", startRow: 3 });
             });
-
+            */
         });
 
         $(document).on("click", "#Publish", function () {
@@ -1110,7 +1138,7 @@ var app = (function () {
               };
               getRiskRegister(projectId, RRId[0]);
               sessionStorage.setItem("RRId", RRId);
-              var riskRegister = new Office.TableData();
+              /*var riskRegister = new Office.TableData();
               riskRegister.headers = ["Risk Title", "Risk ID", "Status", "Risk Type", "Date", "Risk Owner", "Impact/ \rInherent", "Impact/Residual", "Probability/ Inherent", "Probability/ Residual", "Expected value Inherent", "Expected value Residual"];
               riskRegister.rows = matrix;
               // Set the myTable in the document.
@@ -1131,7 +1159,7 @@ var app = (function () {
 
               Office.context.document.bindings.addFromSelectionAsync(
                    Office.BindingType.Table,
-                           { id: "riskRegister" },
+                           { id: "riskRegister", name:"riskRegister" },
                    function (asyncResult) {
                        if (asyncResult.status == "failed") {
                            //showMessage("Action failed with error: " + asyncResult.error.message);
@@ -1139,8 +1167,36 @@ var app = (function () {
                            //app.showNotification('Binding done');
                        }
                    }
-              );
+              );*/
               //getRiskRegister(projectId, str[0].id);
+
+              Excel.run(function (ctx) {
+                  var sheet = ctx.workbook.worksheets.getActiveWorksheet();
+                  var riskRegister = ctx.workbook.tables.add('Sheet1!A1:L1', true);
+                  riskRegister.name = 'riskRegister';
+                  riskRegister.getHeaderRowRange().values = [["Risk Title", "Risk ID", "Status", "Risk Type", "Date", "Risk Owner", "Impact/ \rInherent", "Impact/Residual", "Probability/ Inherent", "Probability/ Residual", "Expected value Inherent", "Expected value Residual"]];
+                  var tableRows = riskRegister.rows;
+                  //var line = [[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]];
+                  //tableRows.add(null, line);
+                  //var line2 = matrix[0];
+                  //var line3 = [1];
+                  //line3[0] = matrix[1]
+                  //tableRows.add(null, line3);
+                  for (var i = 0; i < matrix.length; i++) {
+                      var line = [1];
+                      line[0] = matrix[i];
+                      tableRows.add(null, line);
+                      //tableRows.add(null, matrix[i]);
+                  };
+                 
+
+                  return ctx.sync().then(function () {
+                      showMessage("Success! My monthly expense table created! Select the arrow button to see how to remove the table.");
+                  })
+                  .catch(function (error) {
+                      showMessage(JSON.stringify(error));
+                  });
+              });
           });
     };
 
@@ -1159,8 +1215,8 @@ var app = (function () {
                  //var matrix = riskValuesImpact(str);
                  ctx.workbook.worksheets.getItem('Values').getRange("C1:C" + Object.keys(str.impact).length).values = riskValuesImpact(str)/*[[1], [2], [1], [2], [1]] //str.impact[0].State*/;
                  ctx.workbook.worksheets.getItem('Values').getRange("D1:D" + Object.keys(str.probability).length).values = riskValuesProb(str)/*[[1], [2], [1], [2], [1]] //str.impact[0].State*/;
-                 //ctx.workbook.worksheets.getItem('Values').activate();
-                 //app.showNotification(riskValues(str).length)
+                 ctx.workbook.worksheets.getItem('Values').getRange("A1:A3").values = [["New"],["Active"],["Closed"]]/*[[1], [2], [1], [2], [1]] //str.impact[0].State*/;
+                 ctx.workbook.worksheets.getItem('Values').getRange("B1:B2").values = [["Threat"],["Opportunity"]]/*[[1], [2], [1], [2], [1]] //str.impact[0].State*/;
                  return ctx.sync().then(function () {
                      //console.log("Success! Insert range in A1:C3.");
                  });;

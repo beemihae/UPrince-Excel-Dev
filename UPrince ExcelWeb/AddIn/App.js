@@ -1035,18 +1035,7 @@ var app = (function () {
     }
 
     function riskRegisterGET() {
-        Excel.run(function (ctx) {
-            var tableName = 'riskRegister';
-            var table = ctx.workbook.tables.getItem(tableName);
-            table.delete();
-            return ctx.sync();
-        })
-    .then(function () {
-        showMessage("Success! Removed table.");
-    })
-    .catch(function (error) {
-        console.log("Error: " + error);
-    });
+        deleteTable('RiskRegister');
         var projectId = sessionStorage.getItem('projectId');
         var urlProject = host + '/api/RiskRegister/GetRiskRegister';
         var dataEmail = {
@@ -1108,10 +1097,7 @@ var app = (function () {
                            matrix[i][9] = isNull(anw.selectedProbabilityResidual);
                            matrix[i][10] = isNull(anw.expectedValueInherent);
                            matrix[i][11] = isNull(anw.expectedValueResidual);
-
-
                        })
-
                   }
               }
               else {
@@ -1119,64 +1105,23 @@ var app = (function () {
               };
               getRiskRegister(projectId, RRId[0]);
               sessionStorage.setItem("RRId", RRId);
-              /*var riskRegister = new Office.TableData();
-              riskRegister.headers = ["Risk Title", "Risk ID", "Status", "Risk Type", "Date", "Risk Owner", "Impact/ \rInherent", "Impact/Residual", "Probability/ Inherent", "Probability/ Residual", "Expected value Inherent", "Expected value Residual"];
-              riskRegister.rows = matrix;
-              // Set the myTable in the document.
-              Office.context.document.setSelectedDataAsync(
-                riskRegister,
-                {
-                    coercionType: Office.CoercionType.Table, cellFormat: [{ cells: Office.Table.All, format: { width: "auto fit" } }, { cells: { column: 4 }, format: { numberFormat: "dd-mm-yyyy" } }
-                    ]
-                },
-                function (asyncResult) {
-                    if (asyncResult.status == "failed") {
-                        //showMessage("Action failed with error: " + asyncResult.error.message);
-                    } else {
-                        //showMessage("Check out your new table, then click next to learn another API call.");
-                    }
-                }
-              );
-
-              Office.context.document.bindings.addFromSelectionAsync(
-                   Office.BindingType.Table,
-                           { id: "riskRegister", name:"riskRegister" },
-                   function (asyncResult) {
-                       if (asyncResult.status == "failed") {
-                           //showMessage("Action failed with error: " + asyncResult.error.message);
-                       } else {
-                           //app.showNotification('Binding done');
-                       }
-                   }
-              );*/
-              //getRiskRegister(projectId, str[0].id);
 
               Excel.run(function (ctx) {
-                  var sheet = ctx.workbook.worksheets.getActiveWorksheet();
                   var riskRegister = ctx.workbook.tables.add('RiskRegister!A1:L1', true);
                   riskRegister.name = 'riskRegister';
                   riskRegister.getHeaderRowRange().values = [["Risk Title", "Risk ID", "Status", "Risk Type", "Date", "Risk Owner", "Impact/ \rInherent", "Impact/Residual", "Probability/ Inherent", "Probability/ Residual", "Expected value Inherent", "Expected value Residual"]];
                   var tableRows = riskRegister.rows;
-                  //var line = [[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]];
-                  //tableRows.add(null, line);
-                  //var line2 = matrix[0];
-                  //var line3 = [1];
-                  //line3[0] = matrix[1]
-                  //tableRows.add(null, line3);
                   for (var i = 0; i < matrix.length; i++) {
                       var line = [1];
                       line[0] = matrix[i];
                       tableRows.add(null, line);
-                      //tableRows.add(null, matrix[i]);
                   };
-
-
                   return ctx.sync().then(function () {
                       showMessage("Success! My monthly expense table created! Select the arrow button to see how to remove the table.");
                   })
-                  .catch(function (error) {
-                      showMessage(JSON.stringify(error));
-                  });
+                   .catch(function (error) {
+                       showMessage(JSON.stringify(error));
+                   });
               });
           });
     };
@@ -1245,7 +1190,21 @@ var app = (function () {
             console.log("Debug info: " + JSON.stringify(error.debugInfo));
         }
     });
-    }
+    };
 
+    function deleteTable(name) {
+        Excel.run(function (ctx) {
+            var tableName = name;
+            var table = ctx.workbook.tables.getItem(tableName);
+            table.delete();
+            return ctx.sync();
+        })
+    .then(function () {
+        showMessage("Success! Removed table.");
+    })
+    .catch(function (error) {
+        console.log("Error: " + error);
+    });
+    };
     return app;
 })();

@@ -413,66 +413,9 @@ var app = (function () {
         });
 
         $(document).on("click", '#ProductDescriptions', function () {
-            var projectId = sessionStorage.getItem('projectId'); //when using the login-screen
+            activateWorksheet("ProductDescription");
+            productDescriptionGET();
 
-            //var projectId = '22050'; //to test just this page
-            var urlProject = host + '/api/ProductDescription/GetAllProductDescription?projectId=' + projectId;
-
-            $.ajax({
-                type: 'GET',
-                url: urlProject,
-                dataType: "json",
-                contentType: "application/json; charset=utf-8",
-
-            })
-              .done(function (str) {
-                  var PdId = [str.length];
-                  if (str.length > 0) {
-                      var matrix = [str.length];
-                      for (var i = 0; i < str.length; i++) {
-                          matrix[i] = [5];
-                          PdId[i] = str[i].Id;
-                          matrix[i][0] = isNull(str[i].Title);
-                          matrix[i][1] = isNull(str[i].Identifier);
-                          matrix[i][2] = isNull(str[i].Status);
-                          matrix[i][3] = isNull(str[i].ProductCategory);
-                          matrix[i][4] = isNull(str[i].Version);
-                      }
-                  } else {
-                      var matrix = [["", "", "", "", "", ""]]
-                  }
-                  sessionStorage.setItem("PdId", PdId);
-                  var productDescriptions = new Office.TableData();
-                  productDescriptions.headers = ["Title", "Identifier", "Workflow Status", "Item Type", "Version"];
-                  productDescriptions.rows = matrix;
-
-                  // Set the myTable in the document.
-                  Office.context.document.setSelectedDataAsync(
-                    productDescriptions,
-                    {
-                        coercionType: Office.CoercionType.Table, cellFormat: [{ cells: Office.Table.All, format: { width: "auto fit" } }
-                        ]
-                    },
-                    function (asyncResult) {
-                        if (asyncResult.status == "failed") {
-                            //showMessage("Action failed with error: " + asyncResult.error.message);
-                        } else {
-                            //showMessage("Check out your new table, then click next to learn another API call.");
-                        }
-                    }
-                  );
-
-                  Office.context.document.bindings.addFromSelectionAsync(
-                       Office.BindingType.Table,
-                               { id: "productDescriptions" },
-                       function (asyncResult) {
-                           if (asyncResult.status == "failed") {
-                               //showMessage("Action failed with error: " + asyncResult.error.message);
-                           } else {
-                               //app.showNotification('Binding done');
-                           }
-                       });
-              });
         });
 
         $(document).on("click", '#QualityRegister', function () {
@@ -1175,6 +1118,58 @@ var app = (function () {
         }
         //app.showNotification(val[2][0]);
         return val;
+    };
+
+    function productDescriptionGET() {
+        deleteTable('ProductDescription');
+        var projectId = sessionStorage.getItem('projectId');
+        var urlProject = host + '/api/ProductDescription/GetAllProductDescription?projectId=' + projectId;
+
+        $.ajax({
+            type: 'GET',
+            url: urlProject,
+            dataType: "json",
+            contentType: "application/json; charset=utf-8",
+
+        })
+         .done(function (str) {
+             var PdId = [str.length];
+             if (str.length > 0) {
+                 var matrix = [str.length];
+                 for (var i = 0; i < str.length; i++) {
+                     matrix[i] = [5];
+                     PdId[i] = str[i].Id;
+                     matrix[i][0] = isNull(str[i].Title);
+                     matrix[i][1] = isNull(str[i].Identifier);
+                     matrix[i][2] = isNull(str[i].Status);
+                     matrix[i][3] = isNull(str[i].ProductCategory);
+                     matrix[i][4] = isNull(str[i].Version);
+                 }
+             } else {
+                 var matrix = [["", "", "", "", "", ""]]
+             }
+             //getRiskRegister(projectId, RRId[0]);
+             sessionStorage.setItem("PdId", PdId);
+
+             Excel.run(function (ctx) {
+                 var productDescription = ctx.workbook.tables.add('ProductDescription!A1:E1', true);
+                 productDescription.name = 'ProductDescription';
+                 productDescription.getHeaderRowRange().values = [["Title", "Identifier", "Workflow Status", "Item Type", "Version"]];
+                 var tableRows = productDescription.rows;
+                 for (var i = 0; i < matrix.length; i++) {
+                     var line = [1];
+                     line[0] = matrix[i];
+                     tableRows.add(null, line);
+                 };
+                 return ctx.sync().then(function () {
+                     showMessage("Success! My monthly expense table created! Select the arrow button to see how to remove the table.");
+                 })
+                  .catch(function (error) {
+                      showMessage(JSON.stringify(error));
+                  });
+             });
+         });
+
     };
 
     function activateWorksheet(name) {

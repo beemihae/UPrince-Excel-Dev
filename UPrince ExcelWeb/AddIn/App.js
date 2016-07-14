@@ -634,56 +634,16 @@ var app = (function () {
         }); //to do
 
         $(document).on("click", '#RiskRegister', function () {
+            activateWorksheet("RiskRegister");
             riskRegisterGET();
         });
 
         $(document).on("click", "#Refresh", function () {
-            Excel.run(function (ctx) {
-                var binding = ctx.workbook.bindings.getItem("riskRegister");
-                var table = binding.getTable();
-                table.load('name');
-                return ctx.sync().then(function () {
-                    app.showNotification(binding.getTable().value.rows);
-                });
-            }).catch(function (error) {
-                console.log("Error: " + error);
-                if (error instanceof OfficeExtension.Error) {
-                    console.log("Debug info: " + JSON.stringify(error.debugInfo));
-                }
-            });
-            /*Office.select("bindings#riskRegister").getDataAsync({ coercionType: 'table' }, function (result) {
-                    var binding = result.value.rows;
-                    binding.getItemAt(3).delete();
-                });*/
-                /*Excel.run(function (ctx) {
-                    Office.select("bindings#riskRegister").getDataAsync({ coercionType: 'table' }, function (result) {
-                        var binding = result.value.rows;
-                        binding.getItemAt(3).delete();
-                    });
-                    return ctx.sync().then(function () {
-                        console.log("Success! Deleted the 4th row from 'MyTable' and shifts cells up.");
-                    });;
-                }).catch(function (error) {
-                    app.showNotification(error);
-                });*/
-            /*var table = new Office.TableData();
-            //table.headers = ["a", "b", "a", "b", "a", "b"]
-            table.rows = [["Seattle", "WA", "test1", "test2", "test3", "test4"], ["Seattle", "WA", "test1", "test2", "test3", "test4"]];
-            //var table = [["Seattle", "WA", "test1", "test2", "test3", "test4"], ["Seattle", "WA", "test1", "test2", "test3", "test4"]];
-
-            //updateCmdb();
-            Office.context.document.bindings.getByIdAsync("dailyLog", function (asyncResult) {
-                var binding = asyncResult.value;
-                binding.deleteAllDataValuesAsync();
-                binding.setDataAsync(table, { coercionType: "table" });
-                binding.setDataAsync(table, { coercionType: "table", startRow: 1 });
-                binding.setDataAsync(table, { coercionType: "table", startRow: 2 });
-                binding.setDataAsync(table, { coercionType: "table", startRow: 3 });
-            });
-            */
+            riskRegisterGET();
         });
 
         $(document).on("click", "#Publish", function () {
+            //riskRegisterGET();
             //publishCmdb();
             //publishDailyLog();
             publishRiskRegister();
@@ -747,7 +707,7 @@ var app = (function () {
         else if (status == 'Active') return '1';
         else if (status == 'Closed') return '2';
         else {
-            app.showNotification('Wrong Risk Status. Accepted values are "New", "Active", "Closed".');
+            //app.showNotification('Wrong Risk Status. Accepted values are "New", "Active", "Closed".');
             return null
         }
     }
@@ -756,7 +716,8 @@ var app = (function () {
         if (type == 'Threat') return 0;
         else if (type == 'Opportunity') return 1;
         else {
-            app.showNotification('Wrong Risk Type. Accepted values are "Threat", "Opportunity".')
+            //app.showNotification('Wrong Risk Type. Accepted values are "Threat", "Opportunity".')
+            return null;
         }
     }
 
@@ -765,21 +726,21 @@ var app = (function () {
         if (status == "New") return "0";
         else if (status == "Open") return "1";
         else if (status == "Closed") return "2";
-        else app.showNotification('Wrong Issue Status. Accepted values are "New", "Open" and "Closed".')
+        else return null;//app.showNotification('Wrong Issue Status. Accepted values are "New", "Open" and "Closed".')
     };
 
     function isIssueType(type) {
         if (type == "Request For Change") return "0";
         else if (type == "Off Specification") return "1";
         else if (type == "Problem Concern") return "2";
-        else app.showNotification('Wrong Issue Type. Accepted values are "Request For Change", "Off Specification" and "Problem Concern".');
+        else return null //app.showNotification('Wrong Issue Type. Accepted values are "Request For Change", "Off Specification" and "Problem Concern".');
     }
 
     function isPriority(priority) {
         if (priority == "Low") return "2";
         else if (priority == "Medium") return "1";
         else if (priority == "High") return "0";
-        else app.showNotification('Wrong Priority. Accepted values are "Low", "Medium" and "High".');
+        else return null //app.showNotification('Wrong Priority. Accepted values are "Low", "Medium" and "High".');
     }
 
     function isSeverity(severity) {
@@ -796,7 +757,7 @@ var app = (function () {
         if (type == "Project") return "0";
         else if (type == "Program") return "1";
         else if (type == "Corporate") return "2";
-        else app.showNotification('Wrong Lesson Type. Accepted values are "Project", "Program" and "Corporate".')
+        else return null //app.showNotification('Wrong Lesson Type. Accepted values are "Project", "Program" and "Corporate".')
     }
 
     function isLessonStatus(status) {
@@ -804,7 +765,7 @@ var app = (function () {
         else if (status == "Draft") return "1";
         else if (status == "Approval") return "2";
         else if (status == "Version") return "3";
-        else app.showNotification('Wrong Lesson Status. Accepted values are "New", "Draft", "Approval" and "Version".')
+        else return null //app.showNotification('Wrong Lesson Status. Accepted values are "New", "Draft", "Approval" and "Version".')
     }
 
     //if date is asked in form yyyy-mm-dd
@@ -921,56 +882,64 @@ var app = (function () {
 
     //ok
     function publishRiskRegister() {
-        Office.select("bindings#riskRegister").getDataAsync({ coercionType: 'table' }, function (result) {
-            var binding = result.value.rows;
-            //app.showNotification(binding[2][1]);
-            var RRId = sessionStorage.getItem('RRId');
-            var projectId = sessionStorage.getItem('projectId');
-            var urlProject = host + '/api/RiskRegister/PostRiskRegisterHeader';
-            var urlProject2 = host + '/api/RiskRegister/PostRiskRegisterImpact';
-            for (var i = 0; i < binding.length; i++) {
-                //app.showNotification(typeof projectId);
-                var dataEmail = {
-                    "id": binding[i][1],
-                    "projectId": projectId,
-                    "title": binding[i][0],
-                    "riskStatus": isRiskStatus(binding[i][2]),
-                    "riskType": isRiskType(binding[i][3]),
-                    "riskCategory": "33",
-                    "proximity": "15",
-                    "author": "Kurt",
-                    "riskOwner": binding[i][5],
-                    "dateRegistered": convertDate(binding[i][4]),
-                    "version": "1.1",
-                    "workflowStatus": "2"
-                };
-                $.ajax({
-                    type: "POST",
-                    url: urlProject,
-                    dataType: "json",
-                    contentType: "application/json; charset=utf-8",
-                    data: JSON.stringify(dataEmail),
-                });
+        Excel.run(function (ctx) {
+            var rows = ctx.workbook.tables.getItem("riskRegister").rows.load("values");
+            return ctx.sync()
+                .then(function () {
+                    var RRId = sessionStorage.getItem('RRId');
+                    var projectId = sessionStorage.getItem('projectId');
+                    var urlProject = host + '/api/RiskRegister/PostRiskRegisterHeader';
+                    var urlProject2 = host + '/api/RiskRegister/PostRiskRegisterImpact';
+                    for (var i = 0; i < rows.items.length; i++) {
+                        //app.showNotification(rows.items[1].values[0][1]);
+                        var dataEmail = {
+                            "id": rows.items[i].values[0][1],
+                            "projectId": projectId,
+                            "title": rows.items[i].values[0][0],
+                            "riskStatus": isRiskStatus(rows.items[i].values[0][2]),
+                            "riskType": isRiskType(rows.items[i].values[0][3]),
+                            "riskCategory": "33",
+                            "proximity": "15",
+                            "author": "Kurt",
+                            "riskOwner": rows.items[i].values[0][5],
+                            "dateRegistered": convertDate(rows.items[i].values[0][4]),
+                            "version": "1.1",
+                            "workflowStatus": "2"
+                        };
+                        $.ajax({
+                            type: "POST",
+                            url: urlProject,
+                            dataType: "json",
+                            contentType: "application/json; charset=utf-8",
+                            data: JSON.stringify(dataEmail),
+                        });
 
-                var dataEmail2 = {
-                    "riskEntryId": binding[i][1],
-                    "impactInherent": sessionStorage.getItem('riskValuesImpact'+binding[i][6]),
-                    "impactResidual": sessionStorage.getItem('riskValuesImpact' + binding[i][7]),
-                    "probabilityInherent": sessionStorage.getItem('riskValuesImpact' + binding[i][8]),
-                    "probabilityResidual": sessionStorage.getItem('riskValuesImpact' + binding[i][9]),
-                    "expectedInherent": "",
-                    "expectedResidual": ""
-                };
-                $.ajax({
-                    type: "POST",
-                    url: urlProject2,
-                    dataType: "json",
-                    contentType: "application/json; charset=utf-8",
-                    data: JSON.stringify(dataEmail2),
+                        var dataEmail2 = {
+                            "riskEntryId": rows.items[i].values[0][1],
+                            "impactInherent": sessionStorage.getItem('riskValuesImpact' + rows.items[i].values[0][6]),
+                            "impactResidual": sessionStorage.getItem('riskValuesImpact' + rows.items[i].values[0][7]),
+                            "probabilityInherent": sessionStorage.getItem('riskValuesProb' + rows.items[i].values[0][8]),
+                            "probabilityResidual": sessionStorage.getItem('riskValuesProb' + rows.items[i].values[0][9]),
+                            "expectedInherent": null,
+                            "expectedResidual": null
+                        };
+                        $.ajax({
+                            type: "POST",
+                            url: urlProject2,
+                            dataType: "json",
+                            contentType: "application/json; charset=utf-8",
+                            data: JSON.stringify(dataEmail2),
+                        });
+                    }
+                })
+                .then(ctx.sync)
+                .then(function () {
+                    console.log("Success! Format rows of 'Table1' with 2nd cell greater than 2 in green, other rows in red.");
                 });
-            }
+        }).catch(function (error) {
+            console.log(error);
+        });
 
-        })
     };
 
     //ok
@@ -1066,6 +1035,18 @@ var app = (function () {
     }
 
     function riskRegisterGET() {
+        Excel.run(function (ctx) {
+            var tableName = 'riskRegister';
+            var table = ctx.workbook.tables.getItem(tableName);
+            table.delete();
+            return ctx.sync();
+        })
+    .then(function () {
+        showMessage("Success! Removed table.");
+    })
+    .catch(function (error) {
+        console.log("Error: " + error);
+    });
         var projectId = sessionStorage.getItem('projectId');
         var urlProject = host + '/api/RiskRegister/GetRiskRegister';
         var dataEmail = {
@@ -1172,7 +1153,7 @@ var app = (function () {
 
               Excel.run(function (ctx) {
                   var sheet = ctx.workbook.worksheets.getActiveWorksheet();
-                  var riskRegister = ctx.workbook.tables.add('Sheet1!A1:L1', true);
+                  var riskRegister = ctx.workbook.tables.add('RiskRegister!A1:L1', true);
                   riskRegister.name = 'riskRegister';
                   riskRegister.getHeaderRowRange().values = [["Risk Title", "Risk ID", "Status", "Risk Type", "Date", "Risk Owner", "Impact/ \rInherent", "Impact/Residual", "Probability/ Inherent", "Probability/ Residual", "Expected value Inherent", "Expected value Residual"]];
                   var tableRows = riskRegister.rows;
@@ -1188,7 +1169,7 @@ var app = (function () {
                       tableRows.add(null, line);
                       //tableRows.add(null, matrix[i]);
                   };
-                 
+
 
                   return ctx.sync().then(function () {
                       showMessage("Success! My monthly expense table created! Select the arrow button to see how to remove the table.");
@@ -1215,8 +1196,8 @@ var app = (function () {
                  //var matrix = riskValuesImpact(str);
                  ctx.workbook.worksheets.getItem('Values').getRange("C1:C" + Object.keys(str.impact).length).values = riskValuesImpact(str)/*[[1], [2], [1], [2], [1]] //str.impact[0].State*/;
                  ctx.workbook.worksheets.getItem('Values').getRange("D1:D" + Object.keys(str.probability).length).values = riskValuesProb(str)/*[[1], [2], [1], [2], [1]] //str.impact[0].State*/;
-                 ctx.workbook.worksheets.getItem('Values').getRange("A1:A3").values = [["New"],["Active"],["Closed"]]/*[[1], [2], [1], [2], [1]] //str.impact[0].State*/;
-                 ctx.workbook.worksheets.getItem('Values').getRange("B1:B2").values = [["Threat"],["Opportunity"]]/*[[1], [2], [1], [2], [1]] //str.impact[0].State*/;
+                 ctx.workbook.worksheets.getItem('Values').getRange("A1:A3").values = [["New"], ["Active"], ["Closed"]]/*[[1], [2], [1], [2], [1]] //str.impact[0].State*/;
+                 ctx.workbook.worksheets.getItem('Values').getRange("B1:B2").values = [["Threat"], ["Opportunity"]]/*[[1], [2], [1], [2], [1]] //str.impact[0].State*/;
                  return ctx.sync().then(function () {
                      //console.log("Success! Insert range in A1:C3.");
                  });;
@@ -1250,6 +1231,21 @@ var app = (function () {
         //app.showNotification(val[2][0]);
         return val;
     };
+
+    function activateWorksheet(name) {
+        Excel.run(function (ctx) {
+            var wSheetName = name;
+            var worksheet = ctx.workbook.worksheets.getItem(wSheetName);
+            worksheet.activate();
+            return ctx.sync();
+        })
+    .catch(function (error) {
+        console.log("Error: " + error);
+        if (error instanceof OfficeExtension.Error) {
+            console.log("Debug info: " + JSON.stringify(error.debugInfo));
+        }
+    });
+    }
 
     return app;
 })();

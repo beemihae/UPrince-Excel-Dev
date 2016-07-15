@@ -123,102 +123,7 @@ var app = (function () {
         });
 
         $(document).on("click", '#DailyLog', function () {
-            /*var projectId = localStorage.getItem('projectId'); //when using the login-screen
-            //app.showNotification(projectId);
-            app.showNotification('Hello');
-            //var projectId = '22050'; //to test just this page
-            var urlProject = host + '/api/DailyLog/GetDailyLog';
-            var dataEmail = {
-                "projectId": projectId,
-                "identifier": "",
-                "title": "",
-                "status": {
-                    "All": true,
-                    "New": false,
-                    "Waiting": false,
-                    "Completed": false
-                },
-                "issueType": {
-                    "All": true,
-                    "Problem": false,
-                    "Action": false,
-                    "Event": false,
-                    "Comment": false
-                },
-                "priority": {
-                    "All": true,
-                    "High": false,
-                    "Medium": false,
-                    "Low": false
-                },
-                "targetDate": "",
-                "personResponsible": "",
-                "orderField": "id",
-                "sortOrder": "ASC",
-                "coreUserEmail": ""
-            };
-
-
-            $.ajax({
-                type: "POST",
-                url: urlProject,
-                dataType: "json",
-                contentType: "application/json; charset=utf-8",
-                data: JSON.stringify(dataEmail),
-            })
-              .done(function (str) {
-                  var length = Object.keys(str).length;
-                  var DLId = [length]
-                  if (length > 0) {
-                      var matrix = [length];
-                      for (var i = 0; i < length; i++) {
-                          matrix[i] = [7];
-                          DLId[i] = str[i].id;
-                          matrix[i][0] = isNull(str[i].title);
-                          matrix[i][1] = isNull(str[i].id);
-                          matrix[i][2] = isNull(str[i].status);
-                          matrix[i][3] = isNull(str[i].issueType);
-                          matrix[i][4] = isNull(str[i].priority);
-                          matrix[i][5] = formatDate(str[i].targetDate);
-                          matrix[i][6] = isNull(str[i].personResponsible);
-
-
-                      }
-                  }
-                  else {
-                      var matrix = [["", "", "", "", "", "", ""]]
-                  }
-                  localStorage.setItem("DLId", DLId);
-                  var dailyLog = new Office.TableData();
-                  dailyLog.headers = ["Activity Title", "ID", "Status", "Type", "Priority", "Target", "Person Responsible"];
-                  dailyLog.rows = matrix;
-                  // Set the myTable in the document.
-                  Office.context.document.setSelectedDataAsync(
-                    dailyLog,
-                    {
-                        coercionType: Office.CoercionType.Table, cellFormat: [{ cells: Office.Table.All, format: { width: "auto fit" } }
-                        ]
-                    },
-                    function (asyncResult) {
-                        if (asyncResult.status == "failed") {
-                            //showMessage("Action failed with error: " + asyncResult.error.message);
-                        } else {
-                            //showMessage("Check out your new table, then click next to learn another API call.");
-                        }
-                    }
-                  );
-
-                  Office.context.document.bindings.addFromSelectionAsync(
-                       Office.BindingType.Table,
-                               { id: "dailyLog" },
-                       function (asyncResult) {
-                           if (asyncResult.status == "failed") {
-                               //showMessage("Action failed with error: " + asyncResult.error.message);
-                           } else {
-                               //app.showNotification('Binding done');
-                           }
-                       });
-              });*/
+            activateWorksheet("DailyLog");
             dailyLogGET();
         });
 
@@ -591,6 +496,7 @@ var app = (function () {
         $(document).on("click", "#Publish", function () {
             publishRiskRegister();
             publishProductDescription();
+            publishDailyLog();
         });
 
         $(document).on("click", "#createSheet", function () {
@@ -1277,24 +1183,26 @@ var app = (function () {
             console.log(error);
         });
 
-        function isProductCategory(category) {
-            if (category == "External Product") return "0";
-            else return "1";
-        };
+       
 
-        function isToleranceStatus(tolerance) {
-            if (tolerance == "Within Tolerance") return "0";
-            else if (tolerance == "Tolerance Limit") return "1";
-            else return "2";
-        };
+    };
 
-        function isWorkflowStatus(status) {
-            if (status == "New") return "0";
-            else if (status == "Draft") return "1";
-            else if (status == "Approval") return "2";
-            else return "3";
-        };
+    function isProductCategory(category) {
+        if (category == "External Product") return "0";
+        else return "1";
+    };
 
+    function isToleranceStatus(tolerance) {
+        if (tolerance == "Within Tolerance") return "0";
+        else if (tolerance == "Tolerance Limit") return "1";
+        else return "2";
+    };
+
+    function isWorkflowStatus(status) {
+        if (status == "New") return "0";
+        else if (status == "Draft") return "1";
+        else if (status == "Approval") return "2";
+        else return "3";
     };
 
     //Daily Log
@@ -1449,6 +1357,7 @@ var app = (function () {
              });
          })
     };
+
     function dailyLogContext(str) {
         var val = [Object.keys(str.contextList).length];
         for (var i = 0; i < Object.keys(str.contextList).length; i++) {
@@ -1473,5 +1382,64 @@ var app = (function () {
         return val;
     }
 
+    function publishDailyLog() {
+        Excel.run(function (ctx) {
+            var rows = ctx.workbook.tables.getItem("DailyLog").rows.load("values");
+            return ctx.sync()
+                .then(function () {
+                    var DlId = localStorage.getItem('DlId');
+                    var projectId = localStorage.getItem('projectId');
+                    var urlProject = host + '/api/DailyLog/PostDailyLogHeader';
+                    for (var i = 0; i < rows.items.length; i++) {
+                        //app.showNotification(rows.items[1].values[0][1]);
+                        var dataEmail = {
+                            "id": rows.items[i].values[0][1],
+                            "projectId": projectId,
+                            "activityTypeId": isDailyLogType(rows.items[i].values[0][8]),
+                            "title": isNull(rows.items[i].values[0][1]),
+                            "order": "0",
+                            "coreUserEmail": "",
+                            "author": "UPrince",
+                            "authorEmail": localStorage.getItem("email"),
+                            "context": localStorage.getItem("dailyLogContext" + rows.items[i].values[0][2]),
+                            "energy": isEnergy(rows.items[i].values[0][10])
+                        };
+                        $.ajax({
+                            type: "POST",
+                            url: urlProject,
+                            dataType: "json",
+                            contentType: "application/json; charset=utf-8",
+                            data: JSON.stringify(dataEmail),
+                        });
+
+                    }
+                })
+                .then(ctx.sync)
+                .then(function () {
+                    console.log("Success! Format rows of 'Table1' with 2nd cell greater than 2 in green, other rows in red.");
+                });
+        }).catch(function (error) {
+            console.log(error);
+        });
+
+
+    };
+
+    function isDailyLogType(type) {
+        if (type == "Problem") return "0";
+        else if (type == "Action") return "1";
+        else if (type == "Event") return "2";
+        else if (type == "Comment") return "3";
+        else if (type == "Decision") return "4";
+        else return "5";
+    };
+
+    function isEnergy(type) {
+        if (type == "Mild") return "0";
+        else if (type == "Reasonable") return "1";
+        else if (type == "Demanding") return "2";
+        else if (type == "Very Demanding") return "3";
+        else return "5";
+    };
     return app;
 })();

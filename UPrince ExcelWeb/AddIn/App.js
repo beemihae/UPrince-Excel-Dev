@@ -1354,31 +1354,32 @@ var app = (function () {
             if (str.dailyLogListViewModel.length > 0) {
                 var matrix = [str.dailyLogListViewModel.length];
                 for (var i = 0; i < str.dailyLogListViewModel.length; i++) {
-                    matrix[i] = [10];
+                    matrix[i] = [11];
                     //Dld[i] = str[i].dailyLogListViewModel.id;
                     matrix[i][0] = isNull(str.dailyLogListViewModel[i].activity);
-                    matrix[i][1] = isNull(str.dailyLogListViewModel[i].atContext);
-                    matrix[i][2] = formatDate(str.dailyLogListViewModel[i].startDate);
-                    matrix[i][3] = formatDate(str.dailyLogListViewModel[i].targetDate);
-                    matrix[i][4] = isNull(str.dailyLogListViewModel[i].responsibleStatus);
-                    matrix[i][5] = isNull(str.dailyLogListViewModel[i].responsible);
-                    matrix[i][6] = isNull(str.dailyLogListViewModel[i].requester);
-                    matrix[i][7] = isNull(str.dailyLogListViewModel[i].activityType);
-                    matrix[i][8] = isNull(str.dailyLogListViewModel[i].time);
-                    matrix[i][9] = isNull(str.dailyLogListViewModel[i].energy);
+                    matrix[i][1] = isNull(str.dailyLogListViewModel[i].identifier);
+                    matrix[i][2] = isNull(str.dailyLogListViewModel[i].atContext);
+                    matrix[i][3] = formatDate(str.dailyLogListViewModel[i].startDate);
+                    matrix[i][4] = formatDate(str.dailyLogListViewModel[i].targetDate);
+                    matrix[i][5] = isNull(str.dailyLogListViewModel[i].responsibleStatus);
+                    matrix[i][6] = isNull(str.dailyLogListViewModel[i].responsible);
+                    matrix[i][7] = isNull(str.dailyLogListViewModel[i].requester);
+                    matrix[i][8] = isNull(str.dailyLogListViewModel[i].activityType);
+                    matrix[i][9] = isNull(str.dailyLogListViewModel[i].time);
+                    matrix[i][10] = isNull(str.dailyLogListViewModel[i].energy);
                     //matrix[i][6] = isNull(str[i].Version);
                     //localStorage.setItem("ParentId" + str[i].Id, str[i].ParentId);
                 }
             } else {
-                var matrix = [["", "", "", "", "", "", "", "", "", ""]]
+                var matrix = [["", "", "", "", "", "", "", "", "", "",""]]
             };
             
             localStorage.setItem("DlId", DlId);
 
             Excel.run(function (ctx) {
-                var dailyLog = ctx.workbook.tables.add('DailyLog!A1:J1', true);
+                var dailyLog = ctx.workbook.tables.add('DailyLog!A1:K1', true);
                 dailyLog.name = 'DailyLog';
-                dailyLog.getHeaderRowRange().values = [["Activity", "@Context", "Start", "Target", "Status", "Responsible","Requester","Type","Time","Energy"]];
+                dailyLog.getHeaderRowRange().values = [["Activity", "Identifier","@Context", "Start", "Target", "Status", "Responsible","Requester","Type","Time","Energy"]];
                 var tableRows = dailyLog.rows;
                 for (var i = 0; i < matrix.length; i++) {
                     var line = [1];

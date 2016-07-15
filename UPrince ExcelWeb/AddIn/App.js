@@ -1252,11 +1252,11 @@ var app = (function () {
                         var dataEmail = {
                             "id": rows.items[i].values[0][1],
                             "title": rows.items[i].values[0][0],
-                            "productcategory": isProductCategory(rows.items[i].values[0][2]), 
-                            "version": rows.items[i].values[0][5], 
+                            "productcategory": isProductCategory(rows.items[i].values[0][2]),
+                            "version": rows.items[i].values[0][5],
                             "status": isWorkflowStatus(rows.items[i].values[0][4]),
                             "tolerancestatus": isToleranceStatus(rows.items[i].values[0][3]),
-                            "parentid": localStorage.getItem("ParentId"+rows.items[i].values[0][1]),
+                            "parentid": localStorage.getItem("ParentId" + rows.items[i].values[0][1]),
                             "projectid": projectId
                         };
                         $.ajax({
@@ -1266,7 +1266,7 @@ var app = (function () {
                             contentType: "application/json; charset=utf-8",
                             data: JSON.stringify(dataEmail),
                         });
-                        
+
                     }
                 })
                 .then(ctx.sync)
@@ -1296,15 +1296,16 @@ var app = (function () {
         };
 
     };
-    
+
     //Daily Log
     function dailyLogGET() {
         deleteTable("DailyLog");
         var projectId = localStorage.getItem('projectId');
+        var userEmail = localStorage.getItem('email');
         var urlProject = host + "/api/DailyLog/GetDailyLog";
         var dataEmail =
             {
-                "projectId": 27342,
+                "projectId": projectId,
                 "project": null,
                 "identifier": "",
                 "title": "",
@@ -1358,7 +1359,7 @@ var app = (function () {
                 },
                 "responsible": "",
                 "requester": "",
-                "coreUserEmail": "emiel.vanhaesebrouck@uprince.com",
+                "coreUserEmail": userEmail,
                 "atContext": "",
                 "startDate": "",
                 "orderField": "",
@@ -1370,14 +1371,15 @@ var app = (function () {
             dataType: "json",
             contentType: "application/json; charset=utf-8",
             data: JSON.stringify(dataEmail),
-        }).done(function (str) {
+        })
+            .done(function (str) {
             //app.showNotification(str.dailyLogListViewModel.length);
             var DlId = [str.dailyLogListViewModel.length];
             if (str.dailyLogListViewModel.length > 0) {
                 var matrix = [str.dailyLogListViewModel.length];
                 for (var i = 0; i < str.dailyLogListViewModel.length; i++) {
                     matrix[i] = [11];
-                    //Dld[i] = str[i].dailyLogListViewModel.id;
+                    DlId[i] = str.dailyLogListViewModel[i].identifier;
                     matrix[i][0] = isNull(str.dailyLogListViewModel[i].activity);
                     matrix[i][1] = isNull(str.dailyLogListViewModel[i].identifier);
                     matrix[i][2] = isNull(str.dailyLogListViewModel[i].atContext);
@@ -1393,15 +1395,15 @@ var app = (function () {
                     //localStorage.setItem("ParentId" + str[i].Id, str[i].ParentId);
                 }
             } else {
-                var matrix = [["", "", "", "", "", "", "", "", "", "",""]]
+                var matrix = [["", "", "", "", "", "", "", "", "", "", ""]]
             };
-            
+
             localStorage.setItem("DlId", DlId);
 
             Excel.run(function (ctx) {
                 var dailyLog = ctx.workbook.tables.add('DailyLog!A1:K1', true);
                 dailyLog.name = 'DailyLog';
-                dailyLog.getHeaderRowRange().values = [["Activity", "Identifier","@Context", "Start", "Target", "Status", "Responsible","Requester","Type","Time","Energy"]];
+                dailyLog.getHeaderRowRange().values = [["Activity", "Identifier", "@Context", "Start", "Target", "Status", "Responsible", "Requester", "Type", "Time", "Energy"]];
                 var tableRows = dailyLog.rows;
                 for (var i = 0; i < matrix.length; i++) {
                     var line = [1];
@@ -1415,7 +1417,61 @@ var app = (function () {
                      showMessage(JSON.stringify(error));
                  });
             });
-        });
+            getDailyLog(projectId,DlId[0]);
+
+        });        
     };
+
+    function getDailyLog(projectId,dailyLogId){
+        var urlProject = host + '/api/DailyLog/GetDailyLog?logId='+dailyLogId+'&email='+localStorage.getItem("email");
+        $.ajax({
+            type: 'GET',
+            url: urlProject,
+            dataType: "json",
+            contentType: "application/json; charset=utf-8",
+
+        })
+         .done(function (str) {
+             //app.showNotification(str.impact[0].State);
+             Excel.run(function (ctx) {
+                 //var matrix = riskValuesImpact(str);
+                 ctx.workbook.worksheets.getItem('Values').getRange("G1:G" + Object.keys(str.contextList).length).values = dailyLogContext(str)/*[[1], [2], [1], [2], [1]] //str.impact[0].State*/;
+                 ctx.workbook.worksheets.getItem('Values').getRange("I1:I" + Object.keys(str.personnelContacts).length).values = dailyLogUsers(str)/*[[1], [2], [1], [2], [1]] //str.impact[0].State*/;
+                 ctx.workbook.worksheets.getItem('Values').getRange("H1:H6").values = [["Inbox"], ["Next"], ["Waiting"], ["Schedule"], ["Someday"], ["Done"]]/*[[1], [2], [1], [2], [1]] //str.impact[0].State*/;
+                 ctx.workbook.worksheets.getItem('Values').getRange("J1:J6").values = [["Problem"], ["Action"], ["Event"], ["Comment"], ["Decision"], ["Reference"]]/*[[1], [2], [1], [2], [1]] //str.impact[0].State*/;
+                 ctx.workbook.worksheets.getItem('Values').getRange("K1:K7").values = [["5 min"], ["15 min"], ["30 min"], ["1 hr"], ["2 hr"], ["4 hr"], ["8 hr"]]/*[[1], [2], [1], [2], [1]] //str.impact[0].State*/;
+                 ctx.workbook.worksheets.getItem('Values').getRange("L1:L5").values = [["Mild"], ["Reasonable"], ["Demanding"], ["Very Demanding"], ["Extreme"]]/*[[1], [2], [1], [2], [1]] //str.impact[0].State*/;
+                 return ctx.sync().then(function () {
+                     //console.log("Success! Insert range in A1:C3.");
+                 });;
+             }).catch(function (error) {
+                 console.log(error);
+             });
+         })
+    };
+    function dailyLogContext(str) {
+        var val = [Object.keys(str.contextList).length];
+        for (var i = 0; i < Object.keys(str.contextList).length; i++) {
+            val[i] = [1];
+            val[i][0] = str.contextList[i].description;
+            localStorage.setItem('dailyLogContext' + str.contextList[i].description, "" + str.contextList[i].id);
+            //val[i] = str.impact[i].State;
+        }
+        //app.showNotification(val[2][0]);
+        return val;
+    };
+
+    function dailyLogUsers(str) {
+        var val = [Object.keys(str.personnelContacts).length];
+        for (var i = 0; i < Object.keys(str.personnelContacts).length; i++) {
+            val[i] = [1];
+            val[i][0] = str.personnelContacts[i].State;
+            localStorage.setItem('dailyLogUsers' + str.personnelContacts[i].State, "" + str.personnelContacts[i].Index);
+            //val[i] = str.impact[i].State;
+        }
+        //app.showNotification(val[2][0]);
+        return val;
+    }
+
     return app;
 })();

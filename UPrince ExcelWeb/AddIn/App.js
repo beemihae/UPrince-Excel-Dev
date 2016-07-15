@@ -589,27 +589,49 @@ var app = (function () {
         });
 
         $(document).on("click", "#Publish", function () {
-            //riskRegisterGET();
-            //publishCmdb();
-            //publishDailyLog();
             publishRiskRegister();
             publishProductDescription();
-            //publishIssueRegister();
-            //publishLessonLog();
         });
 
         $(document).on("click", "#createSheet", function () {
             Excel.run(function (ctx) {
                 ctx.workbook.worksheets.add("Values");
                 return ctx.sync().then(function () {
-                    app.showNotification("Success! Sheet created");
-                    riskRegisterGET();
+                    //app.showNotification("Success! Sheet created");
+                    //riskRegisterGET();
                 });
             }).catch(function (error) {
-                app.showNotification(error);
+                //app.showNotification(error);
             });
-        });
+            Excel.run(function (ctx) {
+                ctx.workbook.worksheets.add("DailyLog");
+                return ctx.sync().then(function () {
+                    //app.showNotification("Success! Sheet created");
+                    //riskRegisterGET();
+                });
+            }).catch(function (error) {
+                //app.showNotification(error);
+            });
+            Excel.run(function (ctx) {
+                ctx.workbook.worksheets.add("RiskRegister");
+                return ctx.sync().then(function () {
+                    //app.showNotification("Success! Sheet created");
+                    //riskRegisterGET();
+                });
+            }).catch(function (error) {
+                //app.showNotification(error);
+            });
+            Excel.run(function (ctx) {
+                ctx.workbook.worksheets.add("ProductDescription");
+                return ctx.sync().then(function () {
+                    //app.showNotification("Success! Sheet created");
+                    //riskRegisterGET();
+                });
+            }).catch(function (error) {
+                //app.showNotification(error);
+            });
 
+        });
     };
     function isNull(param) {
         if (param == null) return '';

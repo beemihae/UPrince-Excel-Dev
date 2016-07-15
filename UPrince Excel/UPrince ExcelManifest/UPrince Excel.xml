@@ -12,6 +12,9 @@
   <SupportUrl DefaultValue="https://sway.com/NNzEd5KE8iA9lonG" />
   <AppDomains>
     <AppDomain>https://uprinceexceldev.azurewebsites.net</AppDomain>
+    <AppDomain>https://uprinceexceldev.azurewebsites.net</AppDomain>
+    <AppDomain>https://uprince-dev.pronovix.net/oauth2/authorize</AppDomain>
+    <AppDomain>https://uprince-dev.pronovix.net/user/login</AppDomain>
   </AppDomains>
   <Hosts>
     <Host Name="Workbook" />

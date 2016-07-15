@@ -583,6 +583,7 @@ var app = (function () {
 
         $(document).on("click", "#Refresh", function () {
             riskRegisterGET();
+            productDescriptionGET();
         });
 
         $(document).on("click", "#Publish", function () {
@@ -863,8 +864,8 @@ var app = (function () {
                             "impactResidual": sessionStorage.getItem('riskValuesImpact' + rows.items[i].values[0][7]),
                             "probabilityInherent": sessionStorage.getItem('riskValuesProb' + rows.items[i].values[0][8]),
                             "probabilityResidual": sessionStorage.getItem('riskValuesProb' + rows.items[i].values[0][9]),
-                            "expectedInherent": null,
-                            "expectedResidual": null
+                            "expectedInherent": "",//isNull(rows.items[i].values[0][10]),
+                            "expectedResidual": ""//isNull(rows.items[i].values[0][11])
                         };
                         $.ajax({
                             type: "POST",
@@ -1141,20 +1142,28 @@ var app = (function () {
                      PdId[i] = str[i].Id;
                      matrix[i][0] = isNull(str[i].Title);
                      matrix[i][1] = isNull(str[i].Identifier);
-                     matrix[i][2] = isNull(str[i].Status);
-                     matrix[i][3] = isNull(str[i].ProductCategory);
+                     matrix[i][2] = isNull(str[i].ProductCategory);
+                     matrix[i][3] = isNull(str[i].Status);
                      matrix[i][4] = isNull(str[i].Version);
                  }
              } else {
                  var matrix = [["", "", "", "", "", ""]]
              }
-             //getRiskRegister(projectId, RRId[0]);
+             Excel.run(function (ctx) {
+                 ctx.workbook.worksheets.getItem('Values').getRange("E1:E2").values = [["Internal Product"], ["External Product"]]/*[[1], [2], [1], [2], [1]] //str.impact[0].State*/;
+                 ctx.workbook.worksheets.getItem('Values').getRange("F1:F4").values = [["New"], ["Draft"],["Approval"],["Version"]]/*[[1], [2], [1], [2], [1]] //str.impact[0].State*/;
+                 return ctx.sync().then(function () {
+                     //console.log("Success! Insert range in A1:C3.");
+                 });;
+             }).catch(function (error) {
+                 console.log(error);
+             });
              sessionStorage.setItem("PdId", PdId);
 
              Excel.run(function (ctx) {
                  var productDescription = ctx.workbook.tables.add('ProductDescription!A1:E1', true);
                  productDescription.name = 'ProductDescription';
-                 productDescription.getHeaderRowRange().values = [["Title", "Identifier", "Workflow Status", "Item Type", "Version"]];
+                 productDescription.getHeaderRowRange().values = [["Title", "Identifier", "Item Type", "Workflow Status", "Version"]];
                  var tableRows = productDescription.rows;
                  for (var i = 0; i < matrix.length; i++) {
                      var line = [1];

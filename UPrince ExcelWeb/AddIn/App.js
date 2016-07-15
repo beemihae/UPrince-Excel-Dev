@@ -591,6 +591,7 @@ var app = (function () {
             //publishCmdb();
             //publishDailyLog();
             publishRiskRegister();
+            publishProductDescription();
             //publishIssueRegister();
             //publishLessonLog();
         });
@@ -824,7 +825,6 @@ var app = (function () {
         })
     }
 
-    //ok
     function publishRiskRegister() {
         Excel.run(function (ctx) {
             var rows = ctx.workbook.tables.getItem("riskRegister").rows.load("values");
@@ -886,7 +886,6 @@ var app = (function () {
 
     };
 
-    //ok
     function publishIssueRegister() {
         Office.select("bindings#issueRegister").getDataAsync({ coercionType: 'table' }, function (result) {
             var binding = result.value.rows;
@@ -917,7 +916,7 @@ var app = (function () {
         })
     };
 
-    //ok
+
     function publishLessonLog() {
         Office.select("bindings#lessonLog").getDataAsync({ coercionType: 'table' }, function (result) {
             var binding = result.value.rows;
@@ -978,6 +977,37 @@ var app = (function () {
         })
     }
 
+    function activateWorksheet(name) {
+        Excel.run(function (ctx) {
+            var wSheetName = name;
+            var worksheet = ctx.workbook.worksheets.getItem(wSheetName);
+            worksheet.activate();
+            return ctx.sync();
+        })
+    .catch(function (error) {
+        console.log("Error: " + error);
+        if (error instanceof OfficeExtension.Error) {
+            console.log("Debug info: " + JSON.stringify(error.debugInfo));
+        }
+    });
+    };
+
+    function deleteTable(name) {
+        Excel.run(function (ctx) {
+            var tableName = name;
+            var table = ctx.workbook.tables.getItem(tableName);
+            table.delete();
+            return ctx.sync();
+        })
+    .then(function () {
+        showMessage("Success! Removed table.");
+    })
+    .catch(function (error) {
+        console.log("Error: " + error);
+    });
+    };
+
+    //risk register
     function riskRegisterGET() {
         deleteTable('RiskRegister');
         var projectId = sessionStorage.getItem('projectId');
@@ -1121,6 +1151,7 @@ var app = (function () {
         return val;
     };
 
+    //Product Description
     function productDescriptionGET() {
         deleteTable('ProductDescription');
         var projectId = sessionStorage.getItem('projectId');
@@ -1138,20 +1169,23 @@ var app = (function () {
              if (str.length > 0) {
                  var matrix = [str.length];
                  for (var i = 0; i < str.length; i++) {
-                     matrix[i] = [5];
+                     matrix[i] = [6];
                      PdId[i] = str[i].Id;
                      matrix[i][0] = isNull(str[i].Title);
                      matrix[i][1] = isNull(str[i].Identifier);
                      matrix[i][2] = isNull(str[i].ProductCategory);
-                     matrix[i][3] = isNull(str[i].Status);
-                     matrix[i][4] = isNull(str[i].Version);
+                     matrix[i][3] = isNull(str[i].ToleranceStatus);
+                     matrix[i][4] = isNull(str[i].Status);
+                     matrix[i][5] = isNull(str[i].Version);
+                     //matrix[i][6] = isNull(str[i].Version);
+                     localStorage.setItem("ParentId" + str[i].Id, str[i].ParentId);
                  }
              } else {
-                 var matrix = [["", "", "", "", "", ""]]
+                 var matrix = [["", "", "", "", "", "", ""]]
              }
              Excel.run(function (ctx) {
                  ctx.workbook.worksheets.getItem('Values').getRange("E1:E2").values = [["Internal Product"], ["External Product"]]/*[[1], [2], [1], [2], [1]] //str.impact[0].State*/;
-                 ctx.workbook.worksheets.getItem('Values').getRange("F1:F4").values = [["New"], ["Draft"],["Approval"],["Version"]]/*[[1], [2], [1], [2], [1]] //str.impact[0].State*/;
+                 ctx.workbook.worksheets.getItem('Values').getRange("F1:F4").values = [["New"], ["Draft"], ["Approval"], ["Version"]]/*[[1], [2], [1], [2], [1]] //str.impact[0].State*/;
                  return ctx.sync().then(function () {
                      //console.log("Success! Insert range in A1:C3.");
                  });;
@@ -1161,9 +1195,9 @@ var app = (function () {
              sessionStorage.setItem("PdId", PdId);
 
              Excel.run(function (ctx) {
-                 var productDescription = ctx.workbook.tables.add('ProductDescription!A1:E1', true);
+                 var productDescription = ctx.workbook.tables.add('ProductDescription!A1:F1', true);
                  productDescription.name = 'ProductDescription';
-                 productDescription.getHeaderRowRange().values = [["Title", "Identifier", "Item Type", "Workflow Status", "Version"]];
+                 productDescription.getHeaderRowRange().values = [["Title", "Identifier", "Item Type", "Tolerance Status", "Workflow Status", "Version"]];
                  var tableRows = productDescription.rows;
                  for (var i = 0; i < matrix.length; i++) {
                      var line = [1];
@@ -1181,34 +1215,63 @@ var app = (function () {
 
     };
 
-    function activateWorksheet(name) {
+    function publishProductDescription() {
         Excel.run(function (ctx) {
-            var wSheetName = name;
-            var worksheet = ctx.workbook.worksheets.getItem(wSheetName);
-            worksheet.activate();
-            return ctx.sync();
-        })
-    .catch(function (error) {
-        console.log("Error: " + error);
-        if (error instanceof OfficeExtension.Error) {
-            console.log("Debug info: " + JSON.stringify(error.debugInfo));
-        }
-    });
+            var rows = ctx.workbook.tables.getItem("ProductDescription").rows.load("values");
+            return ctx.sync()
+                .then(function () {
+                    var PdId = sessionStorage.getItem('PdId');
+                    var projectId = sessionStorage.getItem('projectId');
+                    var urlProject = host + '/api/productdescription/PostProductDescription';
+                    for (var i = 0; i < rows.items.length; i++) {
+                        //app.showNotification(rows.items[1].values[0][1]);
+                        var dataEmail = {
+                            "id": rows.items[i].values[0][1],
+                            "title": rows.items[i].values[0][0],
+                            "productcategory": isProductCategory(rows.items[i].values[0][2]), 
+                            "version": rows.items[i].values[0][5], 
+                            "status": isWorkflowStatus(rows.items[i].values[0][4]),
+                            "tolerancestatus": isToleranceStatus(rows.items[i].values[0][3]),
+                            "parentid": localStorage.getItem("ParentId"+rows.items[i].values[0][1]),
+                            "projectid": projectId
+                        };
+                        $.ajax({
+                            type: "POST",
+                            url: urlProject,
+                            dataType: "json",
+                            contentType: "application/json; charset=utf-8",
+                            data: JSON.stringify(dataEmail),
+                        });
+                        
+                    }
+                })
+                .then(ctx.sync)
+                .then(function () {
+                    console.log("Success! Format rows of 'Table1' with 2nd cell greater than 2 in green, other rows in red.");
+                });
+        }).catch(function (error) {
+            console.log(error);
+        });
+
+        function isProductCategory(category) {
+            if (category == "External Product") return "0";
+            else return "1";
+        };
+
+        function isToleranceStatus(tolerance) {
+            if (tolerance == "Within Tolerance") return "0";
+            else if (tolerance == "Tolerance Limit") return "1";
+            else return "2";
+        };
+
+        function isWorkflowStatus(status) {
+            if (status == "New") return "0";
+            else if (status == "Draft") return "1";
+            else if (status == "Approval") return "2";
+            else return "3";
+        };
+
     };
 
-    function deleteTable(name) {
-        Excel.run(function (ctx) {
-            var tableName = name;
-            var table = ctx.workbook.tables.getItem(tableName);
-            table.delete();
-            return ctx.sync();
-        })
-    .then(function () {
-        showMessage("Success! Removed table.");
-    })
-    .catch(function (error) {
-        console.log("Error: " + error);
-    });
-    };
     return app;
 })();

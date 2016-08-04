@@ -488,12 +488,12 @@ var app = (function () {
         });
 
         $(document).on("click", "#Refresh", function () {
-            //deleteTable('RiskRegister');
+            deleteTable('riskRegister');
             deleteTable('DailyLog');
-            //deleteTable('ProductDescription');
-            //riskRegisterGET();
-            //productDescriptionGET();
-            //dailyLogGET();
+            deleteTable('ProductDescription');
+            riskRegisterGET();
+            productDescriptionGET();
+            dailyLogGET();
         });
 
         $(document).on("click", "#Publish", function () {

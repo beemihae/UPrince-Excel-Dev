@@ -76,12 +76,12 @@
           <ExtensionPoint xsi:type="PrimaryCommandSurface">
             <!--Use OfficeTab to extend an existing Tab. Use CustomTab to create a new tab -->
             <!-- Documentation includes all the IDs currently tested to work -->
-            <OfficeTab id="TabData">
+            <CustomTab id="UPrince.Tab1">
               <!--Group. Ensure you provide a unique id. Recommendation for any IDs is to namespace using your companyname-->
               <Group id="UPrince.Tab1.Group1">
 
                 <!--Label for your group. resid must point to a ShortString resource -->
-                <Label resid="residLabel4" />
+                <Label resid="UPrince.Tab1.GroupLabel" />
                 <!--Icons. Required sizes 16,31,80, optional 20, 24, 40, 48, 64. Strongly recommended to provide all sizes for great UX -->
                 <!--Use PNG icons and remember that all URLs on the resources section must use HTTPS -->
                 <Icon>
@@ -106,10 +106,8 @@
                   </Action>
                 </Control>
               </Group>
-            </OfficeTab>
+            </CustomTab>
           </ExtensionPoint>
-
-
         </DesktopFormFactor>
       </Host>
     </Hosts>
@@ -153,7 +151,12 @@
         <bt:String id="Contoso.GetStarted.Title" DefaultValue="UPrince Loaded Successfully">
           <bt:Override Locale="ja-jp" Value="JA-JP Get Started Title" />
         </bt:String>
-
+        <bt:String id="UPrince.Tab1.TabLabel" DefaultValue="UPrince">
+          <bt:Override Locale="ja-jp" Value="JA-JP UPrince" />
+        </bt:String>
+        <bt:String id="UPrince.Tab1.GroupLabel" DefaultValue="UPrince">
+          <bt:Override Locale="ja-jp" Value="JA-JP UPrince" />
+        </bt:String>
       </bt:ShortStrings>
       <bt:LongStrings>
         <!-- LongStrings max characters==250 -->

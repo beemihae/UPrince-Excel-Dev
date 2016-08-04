@@ -488,9 +488,12 @@ var app = (function () {
         });
 
         $(document).on("click", "#Refresh", function () {
-            riskRegisterGET();
-            productDescriptionGET();
-            dailyLogGET();
+            //deleteTable('RiskRegister');
+            deleteTable('DailyLog');
+            //deleteTable('ProductDescription');
+            //riskRegisterGET();
+            //productDescriptionGET();
+            //dailyLogGET();
         });
 
         $(document).on("click", "#Publish", function () {
@@ -574,7 +577,12 @@ var app = (function () {
             //app.showNotification(year + "-" + month + "-" + day);
             return year + "-" + month + "-" + day;
         };
-    }
+    };
+
+    function formatDate3(date) {
+        if (date == null) return '';
+        else return new Date((date - (25567 + 2)) * 86400 * 1000)
+    };
 
     //Risk Register
     function isRiskStatus(status) {
@@ -755,67 +763,6 @@ var app = (function () {
         })
     }
 
-    function publishRiskRegister() {
-        Excel.run(function (ctx) {
-            var rows = ctx.workbook.tables.getItem("riskRegister").rows.load("values");
-            return ctx.sync()
-                .then(function () {
-                    var RRId = localStorage.getItem('RRId');
-                    var projectId = localStorage.getItem('projectId');
-                    var urlProject = host + '/api/RiskRegister/PostRiskRegisterHeader';
-                    var urlProject2 = host + '/api/RiskRegister/PostRiskRegisterImpact';
-                    for (var i = 0; i < rows.items.length; i++) {
-                        //app.showNotification(rows.items[1].values[0][1]);
-                        var dataEmail = {
-                            "id": rows.items[i].values[0][1],
-                            "projectId": projectId,
-                            "title": rows.items[i].values[0][0],
-                            "riskStatus": isRiskStatus(rows.items[i].values[0][2]),
-                            "riskType": isRiskType(rows.items[i].values[0][3]),
-                            "riskCategory": "33",
-                            "proximity": "15",
-                            "author": "Kurt",
-                            "riskOwner": rows.items[i].values[0][5],
-                            "dateRegistered": convertDate(rows.items[i].values[0][4]),
-                            "version": "1.1",
-                            "workflowStatus": "2"
-                        };
-                        $.ajax({
-                            type: "POST",
-                            url: urlProject,
-                            dataType: "json",
-                            contentType: "application/json; charset=utf-8",
-                            data: JSON.stringify(dataEmail),
-                        });
-
-                        var dataEmail2 = {
-                            "riskEntryId": rows.items[i].values[0][1],
-                            "impactInherent": localStorage.getItem('riskValuesImpact' + rows.items[i].values[0][6]),
-                            "impactResidual": localStorage.getItem('riskValuesImpact' + rows.items[i].values[0][7]),
-                            "probabilityInherent": localStorage.getItem('riskValuesProb' + rows.items[i].values[0][8]),
-                            "probabilityResidual": localStorage.getItem('riskValuesProb' + rows.items[i].values[0][9]),
-                            "expectedInherent": "",//isNull(rows.items[i].values[0][10]),
-                            "expectedResidual": ""//isNull(rows.items[i].values[0][11])
-                        };
-                        $.ajax({
-                            type: "POST",
-                            url: urlProject2,
-                            dataType: "json",
-                            contentType: "application/json; charset=utf-8",
-                            data: JSON.stringify(dataEmail2),
-                        });
-                    }
-                })
-                .then(ctx.sync)
-                .then(function () {
-                    console.log("Success! Format rows of 'Table1' with 2nd cell greater than 2 in green, other rows in red.");
-                });
-        }).catch(function (error) {
-            console.log(error);
-        });
-
-    };
-
     function publishIssueRegister() {
         Office.select("bindings#issueRegister").getDataAsync({ coercionType: 'table' }, function (result) {
             var binding = result.value.rows;
@@ -926,20 +873,43 @@ var app = (function () {
         Excel.run(function (ctx) {
             var tableName = name;
             var table = ctx.workbook.tables.getItem(tableName);
-            table.delete();
+            var tableDataRange = table.getDataBodyRange();
+            tableDataRange.load('address')
+            //var range = tableDataRange.address;
+            //tableDataRange.address.delete();
+            return ctx.sync().then(function () {
+                //console.log(tableDataRange.address);
+                var range = tableDataRange.address;
+                var rangeAddress = range.substring(range.indexOf('!') + 1);
+                localStorage.setItem('rangeAddress', rangeAddress);
+                var sheetName = range.substring(0, range.indexOf('!'));
+                localStorage.setItem('sheetName', sheetName);
+                //app.showNotification(sheetName);
+                //tableDataRange.address.delete();
+            });
+        }).catch(function (error) {
+            console.log("Error: " + error);
+            if (error instanceof OfficeExtension.Error) {
+                console.log("Debug info: " + JSON.stringify(error.debugInfo));
+            }
+        });
+
+        Excel.run(function (ctx) {
+            var range = ctx.workbook.worksheets.getItem(localStorage.getItem("sheetName")).getRange(localStorage.getItem("rangeAddress"));
+            //app.showNotification(localStorage.getItem("rangeAddress"));
+            range.delete();
             return ctx.sync();
-        })
-    .then(function () {
-        showMessage("Success! Removed table.");
-    })
-    .catch(function (error) {
-        console.log("Error: " + error);
-    });
+        }).catch(function (error) {
+            //app.showNotification("Error: " + error);
+            if (error instanceof OfficeExtension.Error) {
+                //app.showNotification("Debug info: " + JSON.stringify(error.debugInfo));
+            }
+        });
     };
 
     //risk register
     function riskRegisterGET() {
-        deleteTable('RiskRegister');
+        deleteTable('riskRegister');
         var projectId = localStorage.getItem('projectId');
         var urlProject = host + '/api/RiskRegister/GetRiskRegister';
         var dataEmail = {
@@ -1011,10 +981,8 @@ var app = (function () {
               localStorage.setItem("RRId", RRId);
 
               Excel.run(function (ctx) {
-                  var riskRegister = ctx.workbook.tables.add('RiskRegister!A1:L1', true);
-                  riskRegister.name = 'riskRegister';
-                  riskRegister.getHeaderRowRange().values = [["Risk Title", "Risk ID", "Status", "Risk Type", "Date", "Risk Owner", "Impact/ \rInherent", "Impact/Residual", "Probability/ Inherent", "Probability/ Residual", "Expected value Inherent", "Expected value Residual"]];
-                  var tableRows = riskRegister.rows;
+                  var tables = ctx.workbook.tables;
+                  var tableRows = tables.getItem('riskRegister').rows
                   for (var i = 0; i < matrix.length; i++) {
                       var line = [1];
                       line[0] = matrix[i];
@@ -1081,6 +1049,67 @@ var app = (function () {
         return val;
     };
 
+    function publishRiskRegister() {
+        Excel.run(function (ctx) {
+            var rows = ctx.workbook.tables.getItem("riskRegister").rows.load("values");
+            return ctx.sync()
+                .then(function () {
+                    var RRId = localStorage.getItem('RRId');
+                    var projectId = localStorage.getItem('projectId');
+                    var urlProject = host + '/api/RiskRegister/PostRiskRegisterHeader';
+                    var urlProject2 = host + '/api/RiskRegister/PostRiskRegisterImpact';
+                    for (var i = 0; i < rows.items.length; i++) {
+                        //app.showNotification(rows.items[1].values[0][1]);
+                        var dataEmail = {
+                            "id": rows.items[i].values[0][1],
+                            "projectId": projectId,
+                            "title": rows.items[i].values[0][0],
+                            "riskStatus": isRiskStatus(rows.items[i].values[0][2]),
+                            "riskType": isRiskType(rows.items[i].values[0][3]),
+                            "riskCategory": "33",
+                            "proximity": "15",
+                            "author": "Kurt",
+                            "riskOwner": rows.items[i].values[0][5],
+                            "dateRegistered": convertDate(rows.items[i].values[0][4]),
+                            "version": "1.1",
+                            "workflowStatus": "2"
+                        };
+                        $.ajax({
+                            type: "POST",
+                            url: urlProject,
+                            dataType: "json",
+                            contentType: "application/json; charset=utf-8",
+                            data: JSON.stringify(dataEmail),
+                        });
+
+                        var dataEmail2 = {
+                            "riskEntryId": rows.items[i].values[0][1],
+                            "impactInherent": localStorage.getItem('riskValuesImpact' + rows.items[i].values[0][6]),
+                            "impactResidual": localStorage.getItem('riskValuesImpact' + rows.items[i].values[0][7]),
+                            "probabilityInherent": localStorage.getItem('riskValuesProb' + rows.items[i].values[0][8]),
+                            "probabilityResidual": localStorage.getItem('riskValuesProb' + rows.items[i].values[0][9]),
+                            "expectedInherent": "",//isNull(rows.items[i].values[0][10]),
+                            "expectedResidual": ""//isNull(rows.items[i].values[0][11])
+                        };
+                        $.ajax({
+                            type: "POST",
+                            url: urlProject2,
+                            dataType: "json",
+                            contentType: "application/json; charset=utf-8",
+                            data: JSON.stringify(dataEmail2),
+                        });
+                    }
+                })
+                .then(ctx.sync)
+                .then(function () {
+                    console.log("Success! Format rows of 'Table1' with 2nd cell greater than 2 in green, other rows in red.");
+                });
+        }).catch(function (error) {
+            console.log(error);
+        });
+
+    };
+
     //Product Description
     function productDescriptionGET() {
         deleteTable('ProductDescription');
@@ -1125,10 +1154,12 @@ var app = (function () {
              localStorage.setItem("PdId", PdId);
 
              Excel.run(function (ctx) {
-                 var productDescription = ctx.workbook.tables.add('ProductDescription!A1:F1', true);
-                 productDescription.name = 'ProductDescription';
-                 productDescription.getHeaderRowRange().values = [["Title", "Identifier", "Item Type", "Tolerance Status", "Workflow Status", "Version"]];
-                 var tableRows = productDescription.rows;
+                 //var productDescription = ctx.workbook.tables.add('ProductDescription!A1:F1', true);
+                 //productDescription.name = 'ProductDescription';
+                 //productDescription.getHeaderRowRange().values = [["Title", "Identifier", "Item Type", "Tolerance Status", "Workflow Status", "Version"]];
+                 //var tableRows = productDescription.rows;
+                 var tables = ctx.workbook.tables;
+                 var tableRows = tables.getItem('ProductDescription').rows
                  for (var i = 0; i < matrix.length; i++) {
                      var line = [1];
                      line[0] = matrix[i];
@@ -1154,7 +1185,7 @@ var app = (function () {
                     var projectId = localStorage.getItem('projectId');
                     var urlProject = host + '/api/productdescription/PostProductDescription';
                     for (var i = 0; i < rows.items.length; i++) {
-                        //app.showNotification(rows.items[1].values[0][1]);
+                        //app.showNotification(rows.items.length);
                         var dataEmail = {
                             "id": rows.items[i].values[0][1],
                             "title": rows.items[i].values[0][0],
@@ -1183,13 +1214,13 @@ var app = (function () {
             console.log(error);
         });
 
-       
+
 
     };
 
     function isProductCategory(category) {
-        if (category == "External Product") return "0";
-        else return "1";
+        if (category == "External Product") return "1";
+        else return "0";
     };
 
     function isToleranceStatus(tolerance) {
@@ -1207,6 +1238,7 @@ var app = (function () {
 
     //Daily Log
     function dailyLogGET() {
+
         deleteTable("DailyLog");
         var projectId = localStorage.getItem('projectId');
         var userEmail = localStorage.getItem('email');
@@ -1281,57 +1313,55 @@ var app = (function () {
             data: JSON.stringify(dataEmail),
         })
             .done(function (str) {
-            //app.showNotification(str.dailyLogListViewModel.length);
-            var DlId = [str.dailyLogListViewModel.length];
-            if (str.dailyLogListViewModel.length > 0) {
-                var matrix = [str.dailyLogListViewModel.length];
-                for (var i = 0; i < str.dailyLogListViewModel.length; i++) {
-                    matrix[i] = [11];
-                    DlId[i] = str.dailyLogListViewModel[i].identifier;
-                    matrix[i][0] = isNull(str.dailyLogListViewModel[i].activity);
-                    matrix[i][1] = isNull(str.dailyLogListViewModel[i].identifier);
-                    matrix[i][2] = isNull(str.dailyLogListViewModel[i].atContext);
-                    matrix[i][3] = formatDate(str.dailyLogListViewModel[i].startDate);
-                    matrix[i][4] = formatDate(str.dailyLogListViewModel[i].targetDate);
-                    matrix[i][5] = isNull(str.dailyLogListViewModel[i].responsibleStatus);
-                    matrix[i][6] = isNull(str.dailyLogListViewModel[i].responsible);
-                    matrix[i][7] = isNull(str.dailyLogListViewModel[i].requester);
-                    matrix[i][8] = isNull(str.dailyLogListViewModel[i].activityType);
-                    matrix[i][9] = isNull(str.dailyLogListViewModel[i].time);
-                    matrix[i][10] = isNull(str.dailyLogListViewModel[i].energy);
-                    //matrix[i][6] = isNull(str[i].Version);
-                    //localStorage.setItem("ParentId" + str[i].Id, str[i].ParentId);
-                }
-            } else {
-                var matrix = [["", "", "", "", "", "", "", "", "", "", ""]]
-            };
-
-            localStorage.setItem("DlId", DlId);
-
-            Excel.run(function (ctx) {
-                var dailyLog = ctx.workbook.tables.add('DailyLog!A1:K1', true);
-                dailyLog.name = 'DailyLog';
-                dailyLog.getHeaderRowRange().values = [["Activity", "Identifier", "@Context", "Start", "Target", "Status", "Responsible", "Requester", "Type", "Time", "Energy"]];
-                var tableRows = dailyLog.rows;
-                for (var i = 0; i < matrix.length; i++) {
-                    var line = [1];
-                    line[0] = matrix[i];
-                    tableRows.add(null, line);
+                //app.showNotification(str.dailyLogListViewModel.length);
+                var DlId = [str.dailyLogListViewModel.length];
+                if (str.dailyLogListViewModel.length > 0) {
+                    var matrix = [str.dailyLogListViewModel.length];
+                    for (var i = 0; i < str.dailyLogListViewModel.length; i++) {
+                        matrix[i] = [11];
+                        DlId[i] = str.dailyLogListViewModel[i].identifier;
+                        matrix[i][0] = isNull(str.dailyLogListViewModel[i].activity);
+                        matrix[i][1] = isNull(str.dailyLogListViewModel[i].identifier);
+                        matrix[i][2] = isNull(str.dailyLogListViewModel[i].atContext);
+                        matrix[i][3] = formatDate(str.dailyLogListViewModel[i].startDate);
+                        matrix[i][4] = formatDate(str.dailyLogListViewModel[i].targetDate);
+                        matrix[i][5] = isNull(str.dailyLogListViewModel[i].responsibleStatus);
+                        matrix[i][6] = isNull(str.dailyLogListViewModel[i].responsible);
+                        matrix[i][7] = isNull(str.dailyLogListViewModel[i].requester);
+                        matrix[i][8] = isNull(str.dailyLogListViewModel[i].activityType);
+                        matrix[i][9] = isNull(str.dailyLogListViewModel[i].time);
+                        matrix[i][10] = isNull(str.dailyLogListViewModel[i].energy);
+                        //matrix[i][6] = isNull(str[i].Version);
+                        //localStorage.setItem("ParentId" + str[i].Id, str[i].ParentId);
+                    }
+                } else {
+                    var matrix = [["", "", "", "", "", "", "", "", "", "", ""]]
                 };
-                return ctx.sync().then(function () {
-                    showMessage("Success! My monthly expense table created! Select the arrow button to see how to remove the table.");
-                })
-                 .catch(function (error) {
-                     showMessage(JSON.stringify(error));
-                 });
-            });
-            getDailyLog(projectId,DlId[0]);
 
-        });        
+                localStorage.setItem("DlId", DlId);
+
+                Excel.run(function (ctx) {
+                    var tables = ctx.workbook.tables;
+                    var tableRows = tables.getItem('DailyLog').rows
+                    for (var i = 0; i < matrix.length; i++) {
+                        var line = [1];
+                        line[0] = matrix[i];
+                        tableRows.add(null, line);
+                    };
+                    return ctx.sync().then(function () {
+                        showMessage("Success! My monthly expense table created! Select the arrow button to see how to remove the table.");
+                    })
+                     .catch(function (error) {
+                         showMessage(JSON.stringify(error));
+                     });
+                });
+                getDailyLog(projectId, DlId[0]);
+
+            });
     };
 
-    function getDailyLog(projectId,dailyLogId){
-        var urlProject = host + '/api/DailyLog/GetDailyLog?logId='+dailyLogId+'&email='+localStorage.getItem("email");
+    function getDailyLog(projectId, dailyLogId) {
+        var urlProject = host + '/api/DailyLog/GetDailyLog?logId=' + dailyLogId + '&email=' + localStorage.getItem("email");
         $.ajax({
             type: 'GET',
             url: urlProject,
@@ -1390,13 +1420,14 @@ var app = (function () {
                     var DlId = localStorage.getItem('DlId');
                     var projectId = localStorage.getItem('projectId');
                     var urlProject = host + '/api/DailyLog/PostDailyLogHeader';
+                    var urlProject2 = host + '/api/DailyLog/PostDailyLogInvolvedTiming';
                     for (var i = 0; i < rows.items.length; i++) {
                         //app.showNotification(rows.items[1].values[0][1]);
                         var dataEmail = {
                             "id": rows.items[i].values[0][1],
                             "projectId": projectId,
                             "activityTypeId": isDailyLogType(rows.items[i].values[0][8]),
-                            "title": isNull(rows.items[i].values[0][1]),
+                            "title": isNull(rows.items[i].values[0][0]),
                             "order": "0",
                             "coreUserEmail": "",
                             "author": "UPrince",
@@ -1410,6 +1441,29 @@ var app = (function () {
                             dataType: "json",
                             contentType: "application/json; charset=utf-8",
                             data: JSON.stringify(dataEmail),
+                        });
+                        var dailyLogId = rows.items[i].values[0][1];
+                        var responsible = localStorage.getItem('dailyLogUsers' + rows.items[i].values[0][6]);
+                        var responseStatus = isResponseStatus(rows.items[i].values[0][7]);
+                        var requester = localStorage.getItem('dailyLogUsers' + rows.items[i].values[0][7]);
+                        var startDate = rows.items[i].values[0][3];
+                        var targetDate = (rows.items[i].values[0][4]);
+                        var time = isTime(rows.items[i].values[0][10]);
+                        var dataEmail2 = {
+                            "dailyLogId": rows.items[i].values[0][1],
+                            "responsible": localStorage.getItem('dailyLogUsers' + rows.items[i].values[0][6]),
+                            "responseStatus": isResponseStatus(rows.items[i].values[0][7]),
+                            "requester": localStorage.getItem('dailyLogUsers' + rows.items[i].values[0][7]),
+                            "startDate": formatDate3(rows.items[i].values[0][3]),
+                            "targetDate": formatDate3(rows.items[i].values[0][4]),
+                            "time": isTime(rows.items[i].values[0][10])
+                        };
+                        $.ajax({
+                            type: "POST",
+                            url: urlProject2,
+                            dataType: "json",
+                            contentType: "application/json; charset=utf-8",
+                            data: JSON.stringify(dataEmail2),
                         });
 
                     }
@@ -1439,6 +1493,25 @@ var app = (function () {
         else if (type == "Reasonable") return "1";
         else if (type == "Demanding") return "2";
         else if (type == "Very Demanding") return "3";
+        else return "5";
+    };
+
+    function isTime(type) {
+        if (type = "5 min") return "0";
+        else if (type = "15 min") return "1";
+        else if (type = "30 min") return "2";
+        else if (type = "1 hr") return "3";
+        else if (type = "2 hr") return "4";
+        else if (type = "4 hr") return "5";
+        else return "6";
+    };
+
+    function isResponseStatus(type) {
+        if (type = "Problem") return "0";
+        else if (type = "Action") return "1";
+        else if (type = "Event") return "2";
+        else if (type = "Comment") return "3";
+        else if (type = "Decision") return "4";
         else return "5";
     };
     return app;

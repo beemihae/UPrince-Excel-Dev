@@ -562,7 +562,7 @@ var app = (function () {
 
     //if date is given as a regular date yyyy-mm-ddT..
     function formatDate(date) {
-        if (date == null) { return '' }
+        if (date == null || date == "") { return '' }
         else return date.substring(0, 10);
     }
 
@@ -581,7 +581,7 @@ var app = (function () {
     };
 
     function formatDate3(date) {
-        if (date == null) return '';
+        if (date == null || date == 0) return null;
         else return new Date((date - (25567 + 2)) * 86400 * 1000)
     };
 
@@ -1437,6 +1437,7 @@ var app = (function () {
         //app.showNotification(val[2][0]);
         return val;
     }
+
     function publishDailyLog() {
         Excel.run(function (ctx) {
             var rows = ctx.workbook.tables.getItem("DailyLog").rows.load("values");
@@ -1451,7 +1452,7 @@ var app = (function () {
                         var dataEmail = {
                             "id": rows.items[i].values[0][2],
                             "projectId": localStorage.getItem("dailyLogProject" + rows.items[i].values[0][0]),
-                            "activityTypeId": isResponseStatus(rows.items[i].values[0][7]),
+                            "activityTypeId": isActivityType(rows.items[i].values[0][7]),
                             "title": isNull(rows.items[i].values[0][1]),
                             "order": "0",
                             "coreUserEmail": localStorage.getItem("email"),
@@ -1463,15 +1464,32 @@ var app = (function () {
                             type: "POST",
                             url: urlProject,
                             dataType: "json",
+                            async: false,
                             contentType: "application/json; charset=utf-8",
                             data: JSON.stringify(dataEmail),
-                        });
-                        var dataEmail2 = {
-                            "dailyLogId": rows.items[i].values[0][1],
+                        })
+                        .done(function (result) {
+                            var dataEmail2 = {
+                                "dailyLogId": result,
+                                "responsible": localStorage.getItem('dailyLogUsers' + rows.items[i].values[0][6]),
+                                "responseStatus": isResponseStatus(rows.items[i].values[0][5]),
+                                "targetDate": formatDate3(rows.items[i].values[0][4]),
+                                "time": isTime(rows.items[i].values[0][8])
+                            };
+                            $.ajax({
+                                type: "POST",
+                                url: urlProject2,
+                                dataType: "json",
+                                contentType: "application/json; charset=utf-8",
+                                data: JSON.stringify(dataEmail2),
+                            });
+                        })
+                        /*var dataEmail2 = {
+                            "dailyLogId": rows.items[i].values[0][2],
                             "responsible": localStorage.getItem('dailyLogUsers' + rows.items[i].values[0][6]),
-                            "responseStatus": isResponseStatus(rows.items[i].values[0][7]),
+                            "responseStatus": isResponseStatus(rows.items[i].values[0][5]),
                             "targetDate": formatDate3(rows.items[i].values[0][4]),
-                            "time": isTime(rows.items[i].values[0][10])
+                            "time": isTime(rows.items[i].values[0][8])
                         };
                         $.ajax({
                             type: "POST",
@@ -1479,7 +1497,7 @@ var app = (function () {
                             dataType: "json",
                             contentType: "application/json; charset=utf-8",
                             data: JSON.stringify(dataEmail2),
-                        });
+                        });*/
                     }
                 })
                 .then(ctx.sync)
@@ -1491,6 +1509,16 @@ var app = (function () {
         });
     };
 
+    function isActivityType(type) {
+        if (type == "Problem") return "0";
+        else if (type == "Action") return "1";
+        else if (type == "Event") return "2";
+        else if (type == "Comment") return "3";
+        else if (type == "Decision") return "4";
+        else if (type == "Reference") return "5";
+        else return null
+    }
+
     function isEnergy(type) {
         if (type == "Mild") return "0";
         else if (type == "Reasonable") return "1";
@@ -1501,24 +1529,25 @@ var app = (function () {
     };
 
     function isTime(type) {
-        if (type = "5 min") return "0";
-        else if (type = "15 min") return "1";
-        else if (type = "30 min") return "2";
-        else if (type = "1 hr") return "3";
-        else if (type = "2 hr") return "4";
-        else if (type = "4 hr") return "5";
-        else if (type = "8 hr") return "6";
+        if (type == "5 min") return "0";
+        else if (type == "15 min") return "1";
+        else if (type == "30 min") return "2";
+        else if (type == "1 hr") return "3";
+        else if (type == "2 hr") return "4";
+        else if (type == "4 hr") return "5";
+        else if (type == "8 hr") return "6";
         else return null;
     };
 
     function isResponseStatus(type) {
-        if (type = "Problem") return "0";
-        else if (type = "Action") return "1";
-        else if (type = "Event") return "2";
-        else if (type = "Comment") return "3";
-        else if (type = "Decision") return "4";
-        else if (type = "Reference") return "5";
+        if (type == "Inbox") return "0";
+        else if (type == "Next") return "1";
+        else if (type == "Waiting") return "2";
+        else if (type == "Schedule") return "3";
+        else if (type == "Someday") return "4";
+        else if (type == "Done") return "5";
         else return null;
     };
+
     return app;
 })();

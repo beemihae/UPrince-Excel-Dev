@@ -4,7 +4,7 @@ var app = (function () {
     "use strict";
 
     var app = {};
-    var host = 'https://uprincecoredevapi.azurewebsites.net';
+    var host = 'https://uprinceuatapi.azurewebsites.net';
     // Common initialization function (to be called from each page)
     app.initialize = function () {
         $('body').append(
@@ -498,8 +498,8 @@ var app = (function () {
         });
 
         $(document).on("click", "#Publish", function () {
-            publishRiskRegister();
-            publishProductDescription();
+            //publishRiskRegister();
+            //publishProductDescription();
             publishDailyLog();
         });
 
@@ -882,11 +882,11 @@ var app = (function () {
                 //console.log(tableDataRange.address);
                 var range = tableDataRange.address;
                 var rangeAddress = range.substring(range.indexOf('!') + 1);
-                app.showNotification(rangeAddress);
+                //app.showNotification(rangeAddress);
                 localStorage.setItem('rangeAddress', rangeAddress);
                 var sheetName = range.substring(0, range.indexOf('!'));
                 localStorage.setItem('sheetName', sheetName);
-                
+
                 //tableDataRange.address.delete();
             });
         }).catch(function (error) {
@@ -1431,7 +1431,7 @@ var app = (function () {
         for (var i = 0; i < Object.keys(str.project).length; i++) {
             val[i] = [1];
             val[i][0] = str.project[i].State;
-            localStorage.setItem('dailyLogProject' + str.project[i].State, "" + str.project[i].Index);
+            localStorage.setItem('dailyLogProject' + str.project[i].State, "" + str.project[i].StateId);
             //val[i] = str.impact[i].State;
         }
         //app.showNotification(val[2][0]);
@@ -1451,14 +1451,13 @@ var app = (function () {
                         var dataEmail = {
                             "id": rows.items[i].values[0][2],
                             "projectId": localStorage.getItem("dailyLogProject" + rows.items[i].values[0][0]),
-                            "activityTypeId": isDailyLogType(rows.items[i].values[0][8]),
+                            "activityTypeId": isResponseStatus(rows.items[i].values[0][7]),
                             "title": isNull(rows.items[i].values[0][1]),
                             "order": "0",
-                            "coreUserEmail": "",
-                            "author": "UPrince",
+                            "coreUserEmail": localStorage.getItem("email"),
                             "authorEmail": localStorage.getItem("email"),
-                            "context": localStorage.getItem("dailyLogContext" + rows.items[i].values[0][2]),
-                            "energy": isEnergy(rows.items[i].values[0][10])
+                            "context": localStorage.getItem("dailyLogContext" + rows.items[i].values[0][3]),
+                            "energy": isEnergy(rows.items[i].values[0][9])
                         };
                         $.ajax({
                             type: "POST",
@@ -1467,19 +1466,10 @@ var app = (function () {
                             contentType: "application/json; charset=utf-8",
                             data: JSON.stringify(dataEmail),
                         });
-                        var dailyLogId = rows.items[i].values[0][1];
-                        var responsible = localStorage.getItem('dailyLogUsers' + rows.items[i].values[0][6]);
-                        var responseStatus = isResponseStatus(rows.items[i].values[0][7]);
-                        var requester = localStorage.getItem('dailyLogUsers' + rows.items[i].values[0][7]);
-                        var startDate = rows.items[i].values[0][3];
-                        var targetDate = (rows.items[i].values[0][4]);
-                        var time = isTime(rows.items[i].values[0][10]);
                         var dataEmail2 = {
                             "dailyLogId": rows.items[i].values[0][1],
                             "responsible": localStorage.getItem('dailyLogUsers' + rows.items[i].values[0][6]),
                             "responseStatus": isResponseStatus(rows.items[i].values[0][7]),
-                            "requester": localStorage.getItem('dailyLogUsers' + rows.items[i].values[0][7]),
-                            "startDate": formatDate3(rows.items[i].values[0][3]),
                             "targetDate": formatDate3(rows.items[i].values[0][4]),
                             "time": isTime(rows.items[i].values[0][10])
                         };
@@ -1490,7 +1480,6 @@ var app = (function () {
                             contentType: "application/json; charset=utf-8",
                             data: JSON.stringify(dataEmail2),
                         });
-
                     }
                 })
                 .then(ctx.sync)
@@ -1500,17 +1489,6 @@ var app = (function () {
         }).catch(function (error) {
             console.log(error);
         });
-
-
-    };
-
-    function isDailyLogType(type) {
-        if (type == "Problem") return "0";
-        else if (type == "Action") return "1";
-        else if (type == "Event") return "2";
-        else if (type == "Comment") return "3";
-        else if (type == "Decision") return "4";
-        else return "5";
     };
 
     function isEnergy(type) {
@@ -1518,7 +1496,8 @@ var app = (function () {
         else if (type == "Reasonable") return "1";
         else if (type == "Demanding") return "2";
         else if (type == "Very Demanding") return "3";
-        else return "5";
+        else if (type == "Extreme") return "4";
+        else return null;
     };
 
     function isTime(type) {
@@ -1528,7 +1507,8 @@ var app = (function () {
         else if (type = "1 hr") return "3";
         else if (type = "2 hr") return "4";
         else if (type = "4 hr") return "5";
-        else return "6";
+        else if (type = "8 hr") return "6";
+        else return null;
     };
 
     function isResponseStatus(type) {
@@ -1537,7 +1517,8 @@ var app = (function () {
         else if (type = "Event") return "2";
         else if (type = "Comment") return "3";
         else if (type = "Decision") return "4";
-        else return "5";
+        else if (type = "Reference") return "5";
+        else return null;
     };
     return app;
 })();

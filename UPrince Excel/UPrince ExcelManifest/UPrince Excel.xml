@@ -28,6 +28,11 @@
     <AppDomain>https://plaza.uprince.com/oauth2/authorize</AppDomain>
     <AppDomain>https://plaza.uprince.com/user/login</AppDomain>
     <AppDomain>https://www.linkedin.com/uas/oauth/authorize</AppDomain>
+    <AppDomain>https://plaza.uprince.com</AppDomain>
+    <AppDomain>https://uprinceworddev.azurewebsites.net</AppDomain>
+    <AppDomain>https://uprince-dev.pronovix.net/oauth2/authorize</AppDomain>
+    <AppDomain>https://uprince-dev.pronovix.net/user/login</AppDomain>
+    <AppDomain>https://www.linkedin.com/uas/oauth/authorize</AppDomain>
   </AppDomains>
   <!--EndBasicSettings-->
 

@@ -1329,6 +1329,7 @@ var app = (function () {
         })
             .done(function (str) {
                 //app.showNotification(str.dailyLogListViewModel.length);
+                getDailyLog(str.dailyLogListViewModel[1].identifier);
                 var DlId = [str.dailyLogListViewModel.length];
                 if (str.dailyLogListViewModel.length > 0) {
                     var matrix = [str.dailyLogListViewModel.length];
@@ -1369,12 +1370,12 @@ var app = (function () {
                          showMessage(JSON.stringify(error));
                      });
                 });
-                getDailyLog(projectId, DlId[0]);
+                
 
             });
     };
 
-    function getDailyLog(projectId, dailyLogId) {
+    function getDailyLog(dailyLogId) {
         var urlProject = host + '/api/DailyLog/GetDailyLog?logId=' + dailyLogId + '&email=' + localStorage.getItem("email");
         $.ajax({
             type: 'GET',
@@ -1398,7 +1399,7 @@ var app = (function () {
                      //console.log("Success! Insert range in A1:C3.");
                  });;
              }).catch(function (error) {
-                 console.log(error);
+                 app.showNotification(error);
              });
          })
     };
@@ -1450,28 +1451,65 @@ var app = (function () {
                     var urlProject2 = host + '/api/DailyLog/PostDailyLogInvolvedTiming';
                     for (var i = 0; i < rows.items.length; i++) {
                         //app.showNotification(rows.items[1].values[0][1]);
-                        var dataEmail = {
-                            "id": rows.items[i].values[0][2],
-                            "projectId": localStorage.getItem("dailyLogProject" + rows.items[i].values[0][0]),
-                            "activityTypeId": isActivityType(rows.items[i].values[0][7]),
-                            "title": isNull(rows.items[i].values[0][1]),
-                            "order": "0",
-                            "coreUserEmail": localStorage.getItem("email"),
-                            "authorEmail": localStorage.getItem("email"),
-                            "context": localStorage.getItem("dailyLogContext" + rows.items[i].values[0][3]),
-                            "energy": isEnergy(rows.items[i].values[0][9])
-                        };
-                        $.ajax({
-                            type: "POST",
-                            url: urlProject,
-                            dataType: "json",
-                            async: false,
-                            contentType: "application/json; charset=utf-8",
-                            data: JSON.stringify(dataEmail),
-                        })
-                        .done(function (result) {
+                        if (rows.items[i].values[0][2] == null) {
+                            var dataEmail = {
+                                "id": rows.items[i].values[0][2],
+                                "projectId": localStorage.getItem("dailyLogProject" + rows.items[i].values[0][0]),
+                                "activityTypeId": isActivityType(rows.items[i].values[0][7]),
+                                "title": isNull(rows.items[i].values[0][1]),
+                                "order": "0",
+                                "coreUserEmail": localStorage.getItem("email"),
+                                "authorEmail": localStorage.getItem("email"),
+                                "context": localStorage.getItem("dailyLogContext" + rows.items[i].values[0][3]),
+                                "energy": isEnergy(rows.items[i].values[0][9])
+                            };
+                            $.ajax({
+                                type: "POST",
+                                url: urlProject,
+                                dataType: "json",
+                                async: false,
+                                contentType: "application/json; charset=utf-8",
+                                data: JSON.stringify(dataEmail),
+                            })
+                            .done(function (result) {
+                                var dataEmail2 = {
+                                    "dailyLogId": result,
+                                    "responsible": localStorage.getItem('dailyLogUsers' + rows.items[i].values[0][6]),
+                                    "responseStatus": isResponseStatus(rows.items[i].values[0][5]),
+                                    "targetDate": formatDate3(rows.items[i].values[0][4]),
+                                    "time": isTime(rows.items[i].values[0][8])
+                                };
+                                $.ajax({
+                                    type: "POST",
+                                    url: urlProject2,
+                                    dataType: "json",
+                                    contentType: "application/json; charset=utf-8",
+                                    data: JSON.stringify(dataEmail2),
+                                });
+                            })
+                        }
+                        else {
+                            var dataEmail = {
+                                "id": rows.items[i].values[0][2],
+                                "projectId": localStorage.getItem("dailyLogProject" + rows.items[i].values[0][0]),
+                                "activityTypeId": isActivityType(rows.items[i].values[0][7]),
+                                "title": isNull(rows.items[i].values[0][1]),
+                                "order": "0",
+                                "coreUserEmail": localStorage.getItem("email"),
+                                "authorEmail": localStorage.getItem("email"),
+                                "context": localStorage.getItem("dailyLogContext" + rows.items[i].values[0][3]),
+                                "energy": isEnergy(rows.items[i].values[0][9])
+                            };
+                            $.ajax({
+                                type: "POST",
+                                url: urlProject,
+                                dataType: "json",
+                                async: false,
+                                contentType: "application/json; charset=utf-8",
+                                data: JSON.stringify(dataEmail),
+                            })
                             var dataEmail2 = {
-                                "dailyLogId": result,
+                                "dailyLogId": rows.items[i].values[0][2],
                                 "responsible": localStorage.getItem('dailyLogUsers' + rows.items[i].values[0][6]),
                                 "responseStatus": isResponseStatus(rows.items[i].values[0][5]),
                                 "targetDate": formatDate3(rows.items[i].values[0][4]),
@@ -1484,7 +1522,7 @@ var app = (function () {
                                 contentType: "application/json; charset=utf-8",
                                 data: JSON.stringify(dataEmail2),
                             });
-                        })
+                        };
                         /*var dataEmail2 = {
                             "dailyLogId": rows.items[i].values[0][2],
                             "responsible": localStorage.getItem('dailyLogUsers' + rows.items[i].values[0][6]),

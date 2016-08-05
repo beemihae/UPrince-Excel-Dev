@@ -563,6 +563,7 @@ var app = (function () {
     //if date is given as a regular date yyyy-mm-ddT..
     function formatDate(date) {
         if (date == null || date == "") { return '' }
+        //app.showNotification();
         else return date.substring(0, 10);
     }
 

@@ -488,12 +488,13 @@ var app = (function () {
         });
 
         $(document).on("click", "#Refresh", function () {
-            deleteTable('riskRegister');
+            //deleteTable('ProductDescription');
             deleteTable('DailyLog');
-            deleteTable('ProductDescription');
-            riskRegisterGET();
-            productDescriptionGET();
-            dailyLogGET();
+            //deleteTable('ProductDescription');
+            //deleteTable('risk)
+            //riskRegisterGET();
+            //productDescriptionGET();
+            //dailyLogGET();
         });
 
         $(document).on("click", "#Publish", function () {
@@ -881,10 +882,11 @@ var app = (function () {
                 //console.log(tableDataRange.address);
                 var range = tableDataRange.address;
                 var rangeAddress = range.substring(range.indexOf('!') + 1);
+                app.showNotification(rangeAddress);
                 localStorage.setItem('rangeAddress', rangeAddress);
                 var sheetName = range.substring(0, range.indexOf('!'));
                 localStorage.setItem('sheetName', sheetName);
-                //app.showNotification(sheetName);
+                
                 //tableDataRange.address.delete();
             });
         }).catch(function (error) {
@@ -905,11 +907,23 @@ var app = (function () {
                 //app.showNotification("Debug info: " + JSON.stringify(error.debugInfo));
             }
         });
+        /*function deleteTable(tableName) {
+            Excel.run(function (ctx) {
+                var table = ctx.workbook.tables.getItem(tableName);
+                var tableRange = table.getRange();
+                tableRange.delete();
+            }).catch(function (error) {
+                console.log("Error: " + error);
+                if (error instanceof OfficeExtension.Error) {
+                    console.log("Debug info: " + JSON.stringify(error.debugInfo));
+                }
+            });
+        }*/
     };
 
     //risk register
     function riskRegisterGET() {
-        deleteTable('riskRegister');
+        //deleteTable('riskRegister');
         var projectId = localStorage.getItem('projectId');
         var urlProject = host + '/api/RiskRegister/GetRiskRegister';
         var dataEmail = {
@@ -1112,7 +1126,7 @@ var app = (function () {
 
     //Product Description
     function productDescriptionGET() {
-        deleteTable('ProductDescription');
+        //deleteTable('ProductDescription');
         var projectId = localStorage.getItem('projectId');
         var urlProject = host + '/api/ProductDescription/GetAllProductDescription?projectId=' + projectId;
 
@@ -1239,13 +1253,13 @@ var app = (function () {
     //Daily Log
     function dailyLogGET() {
 
-        deleteTable("DailyLog");
+        //deleteTable("DailyLog");
         var projectId = localStorage.getItem('projectId');
         var userEmail = localStorage.getItem('email');
         var urlProject = host + "/api/DailyLog/GetDailyLog";
         var dataEmail =
             {
-                "projectId": projectId,
+                "projectId": "",
                 "project": null,
                 "identifier": "",
                 "title": "",
@@ -1318,24 +1332,23 @@ var app = (function () {
                 if (str.dailyLogListViewModel.length > 0) {
                     var matrix = [str.dailyLogListViewModel.length];
                     for (var i = 0; i < str.dailyLogListViewModel.length; i++) {
-                        matrix[i] = [11];
+                        matrix[i] = [10];
                         DlId[i] = str.dailyLogListViewModel[i].identifier;
-                        matrix[i][0] = isNull(str.dailyLogListViewModel[i].activity);
-                        matrix[i][1] = isNull(str.dailyLogListViewModel[i].identifier);
-                        matrix[i][2] = isNull(str.dailyLogListViewModel[i].atContext);
-                        matrix[i][3] = formatDate(str.dailyLogListViewModel[i].startDate);
+                        matrix[i][0] = isNull(str.dailyLogListViewModel[i].project);
+                        matrix[i][1] = isNull(str.dailyLogListViewModel[i].activity);
+                        matrix[i][2] = isNull(str.dailyLogListViewModel[i].identifier);
+                        matrix[i][3] = isNull(str.dailyLogListViewModel[i].atContext);
                         matrix[i][4] = formatDate(str.dailyLogListViewModel[i].targetDate);
                         matrix[i][5] = isNull(str.dailyLogListViewModel[i].responsibleStatus);
                         matrix[i][6] = isNull(str.dailyLogListViewModel[i].responsible);
-                        matrix[i][7] = isNull(str.dailyLogListViewModel[i].requester);
-                        matrix[i][8] = isNull(str.dailyLogListViewModel[i].activityType);
-                        matrix[i][9] = isNull(str.dailyLogListViewModel[i].time);
-                        matrix[i][10] = isNull(str.dailyLogListViewModel[i].energy);
+                        matrix[i][7] = isNull(str.dailyLogListViewModel[i].activityType);
+                        matrix[i][8] = isNull(str.dailyLogListViewModel[i].time);
+                        matrix[i][9] = isNull(str.dailyLogListViewModel[i].energy);
                         //matrix[i][6] = isNull(str[i].Version);
                         //localStorage.setItem("ParentId" + str[i].Id, str[i].ParentId);
                     }
                 } else {
-                    var matrix = [["", "", "", "", "", "", "", "", "", "", ""]]
+                    var matrix = [["", "", "", "", "", "", "", "", "", ""]]
                 };
 
                 localStorage.setItem("DlId", DlId);
@@ -1379,6 +1392,7 @@ var app = (function () {
                  ctx.workbook.worksheets.getItem('Values').getRange("J1:J6").values = [["Problem"], ["Action"], ["Event"], ["Comment"], ["Decision"], ["Reference"]]/*[[1], [2], [1], [2], [1]] //str.impact[0].State*/;
                  ctx.workbook.worksheets.getItem('Values').getRange("K1:K7").values = [["5 min"], ["15 min"], ["30 min"], ["1 hr"], ["2 hr"], ["4 hr"], ["8 hr"]]/*[[1], [2], [1], [2], [1]] //str.impact[0].State*/;
                  ctx.workbook.worksheets.getItem('Values').getRange("L1:L5").values = [["Mild"], ["Reasonable"], ["Demanding"], ["Very Demanding"], ["Extreme"]]/*[[1], [2], [1], [2], [1]] //str.impact[0].State*/;
+                 ctx.workbook.worksheets.getItem('Values').getRange("M1:M" + Object.keys(str.project).length).values = dailyLogProject(str);
                  return ctx.sync().then(function () {
                      //console.log("Success! Insert range in A1:C3.");
                  });;
@@ -1412,6 +1426,17 @@ var app = (function () {
         return val;
     }
 
+    function dailyLogProject(str) {
+        var val = [Object.keys(str.project).length];
+        for (var i = 0; i < Object.keys(str.project).length; i++) {
+            val[i] = [1];
+            val[i][0] = str.project[i].State;
+            localStorage.setItem('dailyLogProject' + str.project[i].State, "" + str.project[i].Index);
+            //val[i] = str.impact[i].State;
+        }
+        //app.showNotification(val[2][0]);
+        return val;
+    }
     function publishDailyLog() {
         Excel.run(function (ctx) {
             var rows = ctx.workbook.tables.getItem("DailyLog").rows.load("values");
@@ -1424,10 +1449,10 @@ var app = (function () {
                     for (var i = 0; i < rows.items.length; i++) {
                         //app.showNotification(rows.items[1].values[0][1]);
                         var dataEmail = {
-                            "id": rows.items[i].values[0][1],
-                            "projectId": projectId,
+                            "id": rows.items[i].values[0][2],
+                            "projectId": localStorage.getItem("dailyLogProject" + rows.items[i].values[0][0]),
                             "activityTypeId": isDailyLogType(rows.items[i].values[0][8]),
-                            "title": isNull(rows.items[i].values[0][0]),
+                            "title": isNull(rows.items[i].values[0][1]),
                             "order": "0",
                             "coreUserEmail": "",
                             "author": "UPrince",

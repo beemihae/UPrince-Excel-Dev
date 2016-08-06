@@ -1388,21 +1388,29 @@ var app = (function () {
              //app.showNotification(str.impact[0].State);
              Excel.run(function (ctx) {
                  //var matrix = riskValuesImpact(str);
-                 ctx.workbook.worksheets.getItem('Values').getRange("G1:G" + Object.keys(str.contextList).length).values = dailyLogContext(str)/*[[1], [2], [1], [2], [1]] //str.impact[0].State*/;
-                 ctx.workbook.worksheets.getItem('Values').getRange("I1:I" + Object.keys(str.personnelContacts).length).values = dailyLogUsers(str)/*[[1], [2], [1], [2], [1]] //str.impact[0].State*/;
+                 if (Object.keys(str.contextList).length != 0) {
+                     ctx.workbook.worksheets.getItem('Values').getRange("G1:G" + Object.keys(str.contextList).length).values = dailyLogContext(str)/*[[1], [2], [1], [2], [1]] //str.impact[0].State*/;
+                 }
+                 if (Object.keys(str.personnelContacts).length != 0) {
+                     ctx.workbook.worksheets.getItem('Values').getRange("I1:I" + Object.keys(str.personnelContacts).length).values = dailyLogUsers(str)
+                 }
                  ctx.workbook.worksheets.getItem('Values').getRange("H1:H6").values = [["Inbox"], ["Next"], ["Waiting"], ["Schedule"], ["Someday"], ["Done"]]/*[[1], [2], [1], [2], [1]] //str.impact[0].State*/;
                  ctx.workbook.worksheets.getItem('Values').getRange("J1:J6").values = [["Problem"], ["Action"], ["Event"], ["Comment"], ["Decision"], ["Reference"]]/*[[1], [2], [1], [2], [1]] //str.impact[0].State*/;
                  ctx.workbook.worksheets.getItem('Values').getRange("K1:K7").values = [["5 min"], ["15 min"], ["30 min"], ["1 hr"], ["2 hr"], ["4 hr"], ["8 hr"]]/*[[1], [2], [1], [2], [1]] //str.impact[0].State*/;
                  ctx.workbook.worksheets.getItem('Values').getRange("L1:L5").values = [["Mild"], ["Reasonable"], ["Demanding"], ["Very Demanding"], ["Extreme"]]/*[[1], [2], [1], [2], [1]] //str.impact[0].State*/;
-                 ctx.workbook.worksheets.getItem('Values').getRange("M1:M" + Object.keys(str.project).length).values = dailyLogProject(str);
+                 if (Object.keys(str.project).length != 0) {
+                     ctx.workbook.worksheets.getItem('Values').getRange("M1:M" + Object.keys(str.project).length).values = dailyLogProject(str);
+                 }
+
                  return ctx.sync().then(function () {
                      //console.log("Success! Insert range in A1:C3.");
                  });;
              }).catch(function (error) {
-                 app.showNotification(error);
+                 //app.showNotification(error);
              });
          })
     };
+
 
     function dailyLogContext(str) {
         var val = [Object.keys(str.contextList).length];
@@ -1416,12 +1424,12 @@ var app = (function () {
         return val;
     };
 
-    function dailyLogUsers(str) {
+    function dailyLogUsers(str)  {
         var val = [Object.keys(str.personnelContacts).length];
         for (var i = 0; i < Object.keys(str.personnelContacts).length; i++) {
             val[i] = [1];
             val[i][0] = str.personnelContacts[i].State;
-            localStorage.setItem('dailyLogUsers' + str.personnelContacts[i].State, "" + str.personnelContacts[i].Index);
+            localStorage.setItem('dailyLogUsers' + str.personnelContacts[i].State, "" + str.personnelContacts[i].StateId);
             //val[i] = str.impact[i].State;
         }
         //app.showNotification(val[2][0]);

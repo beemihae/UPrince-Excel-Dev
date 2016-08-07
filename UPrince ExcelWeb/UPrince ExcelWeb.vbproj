@@ -116,6 +116,7 @@
     <Import Include="System.Web.UI.HtmlControls" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="AddIn\Home\FunctionFile.html" />
     <Content Include="AddIn\product-description-page.html" />
     <Content Include="AddIn\project-menu.html" />
     <Content Include="AddIn\project-page.html" />

@@ -489,6 +489,7 @@ var app = (function () {
 
         $(document).on("click", "#Refresh", function () {
             //deleteTable('ProductDescription');
+            localStorage.setItem("dailyLog", "true");
             deleteTable('DailyLog');
             //deleteTable('ProductDescription');
             //deleteTable('risk)
@@ -563,7 +564,7 @@ var app = (function () {
     //if date is given as a regular date yyyy-mm-ddT..
     function formatDate(date) {
         if (date == null || date == "") { return '' }
-        //app.showNotification();
+            //app.showNotification();
         else return date.substring(0, 10);
     }
 
@@ -883,12 +884,12 @@ var app = (function () {
                 //console.log(tableDataRange.address);
                 var range = tableDataRange.address;
                 var rangeAddress = range.substring(range.indexOf('!') + 1);
-                //app.showNotification(rangeAddress);
+                //var rowCounts = rangeAddress.substring(1);
+                //app.showNotification(rangeAddress)
                 localStorage.setItem('rangeAddress', rangeAddress);
                 var sheetName = range.substring(0, range.indexOf('!'));
                 localStorage.setItem('sheetName', sheetName);
-
-                //tableDataRange.address.delete();
+                localStorage.setItem("rowCounts", rowCounts);
             });
         }).catch(function (error) {
             console.log("Error: " + error);
@@ -896,7 +897,18 @@ var app = (function () {
                 console.log("Debug info: " + JSON.stringify(error.debugInfo));
             }
         });
-
+        //var length = parseInt(localStorage.getItem('rangeAddress'))-1;
+        //app.showNotification(length);
+        /*for (var i = 0; i < length; i++) {
+            Excel.run(function (ctx) {
+                ctx.workbook.tables.getItem(name).rows.getItemAt(0).delete();
+                return ctx.sync().then(function () {
+                    console.log("Success! Deleted the 0th row from 'MyTable' and shifts cells up.");
+                });;
+            }).catch(function (error) {
+                console.log("Error: " + error);
+            });
+        }*/
         Excel.run(function (ctx) {
             var range = ctx.workbook.worksheets.getItem(localStorage.getItem("sheetName")).getRange(localStorage.getItem("rangeAddress"));
             //app.showNotification(localStorage.getItem("rangeAddress"));
@@ -908,18 +920,34 @@ var app = (function () {
                 //app.showNotification("Debug info: " + JSON.stringify(error.debugInfo));
             }
         });
-        /*function deleteTable(tableName) {
-            Excel.run(function (ctx) {
-                var table = ctx.workbook.tables.getItem(tableName);
-                var tableRange = table.getRange();
-                tableRange.delete();
-            }).catch(function (error) {
-                console.log("Error: " + error);
-                if (error instanceof OfficeExtension.Error) {
-                    console.log("Debug info: " + JSON.stringify(error.debugInfo));
+
+        Excel.run(function (ctx) {
+            var tableName = name;
+            var table = ctx.workbook.tables.getItem(tableName);
+            var tableDataRange = table.getDataBodyRange();
+            tableDataRange.load('address')
+            //var range = tableDataRange.address;
+            //tableDataRange.address.delete();
+            return ctx.sync().then(function () {
+                //console.log(tableDataRange.address);
+                var range = tableDataRange.address;
+                var rangeAddress = range.substring(range.indexOf('!') + 1);
+                //var rowCounts = rangeAddress.substring(1);
+                //app.showNotification(rangeAddress)
+                if (rangeAddress != "A2:J2") {
+                    deleteTable(name);
+                    deleteTable(name);
+                }
+                else if (localStorage.getItem("dailyLog") == "true") {
+                    dailyLogGET();
                 }
             });
-        }*/
+        }).catch(function (error) {
+            console.log("Error: " + error);
+            if (error instanceof OfficeExtension.Error) {
+                console.log("Debug info: " + JSON.stringify(error.debugInfo));
+            }
+        });
     };
 
     //risk register
@@ -1253,7 +1281,7 @@ var app = (function () {
 
     //Daily Log
     function dailyLogGET() {
-
+        localStorage.setItem("dailyLog","false")
         //deleteTable("DailyLog");
         var projectId = localStorage.getItem('projectId');
         var userEmail = localStorage.getItem('email');
@@ -1370,7 +1398,7 @@ var app = (function () {
                          showMessage(JSON.stringify(error));
                      });
                 });
-                
+
 
             });
     };
@@ -1404,7 +1432,7 @@ var app = (function () {
 
                  return ctx.sync().then(function () {
                      //console.log("Success! Insert range in A1:C3.");
-                 });;
+                 });
              }).catch(function (error) {
                  //app.showNotification(error);
              });
@@ -1424,7 +1452,7 @@ var app = (function () {
         return val;
     };
 
-    function dailyLogUsers(str)  {
+    function dailyLogUsers(str) {
         var val = [Object.keys(str.personnelContacts).length];
         for (var i = 0; i < Object.keys(str.personnelContacts).length; i++) {
             val[i] = [1];
@@ -1459,7 +1487,8 @@ var app = (function () {
                     var urlProject2 = host + '/api/DailyLog/PostDailyLogInvolvedTiming';
                     for (var i = 0; i < rows.items.length; i++) {
                         //app.showNotification(rows.items[1].values[0][1]);
-                        if (rows.items[i].values[0][2] == null) {
+                        if (rows.items[i].values[0][2] == null || rows.items[i].values[0][2] == "") {
+                            //app.showNotification('No id');
                             var dataEmail = {
                                 "id": rows.items[i].values[0][2],
                                 "projectId": localStorage.getItem("dailyLogProject" + rows.items[i].values[0][0]),
@@ -1480,6 +1509,7 @@ var app = (function () {
                                 data: JSON.stringify(dataEmail),
                             })
                             .done(function (result) {
+                                addId(i, result);
                                 var dataEmail2 = {
                                     "dailyLogId": result,
                                     "responsible": localStorage.getItem('dailyLogUsers' + rows.items[i].values[0][6]),
@@ -1531,20 +1561,7 @@ var app = (function () {
                                 data: JSON.stringify(dataEmail2),
                             });
                         };
-                        /*var dataEmail2 = {
-                            "dailyLogId": rows.items[i].values[0][2],
-                            "responsible": localStorage.getItem('dailyLogUsers' + rows.items[i].values[0][6]),
-                            "responseStatus": isResponseStatus(rows.items[i].values[0][5]),
-                            "targetDate": formatDate3(rows.items[i].values[0][4]),
-                            "time": isTime(rows.items[i].values[0][8])
-                        };
-                        $.ajax({
-                            type: "POST",
-                            url: urlProject2,
-                            dataType: "json",
-                            contentType: "application/json; charset=utf-8",
-                            data: JSON.stringify(dataEmail2),
-                        });*/
+
                     }
                 })
                 .then(ctx.sync)
@@ -1553,6 +1570,22 @@ var app = (function () {
                 });
         }).catch(function (error) {
             console.log(error);
+        });
+    };
+
+    function addId(range, id) {
+        Excel.run(function (ctx) {
+            var count = (range + 2);
+            //app.showNotification(typeof(range) + "  "+ typeof(range + 1));
+            var excelRange = "C" + count + ":C" + count;
+            //app.showNotification(excelRange);
+            ctx.workbook.worksheets.getItem('DailyLog').getRange(excelRange).values = ("" + id)/*[[1], [2], [1], [2], [1]] //str.impact[0].State*/;
+
+            return ctx.sync().then(function () {
+                //console.log("Success! Insert range in A1:C3.");
+            });
+        }).catch(function (error) {
+            // app.showNotification(error);
         });
     };
 

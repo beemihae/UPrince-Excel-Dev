@@ -28,6 +28,9 @@
     <AppDomain>https://plaza.uprince.com/oauth2/authorize</AppDomain>
     <AppDomain>https://plaza.uprince.com/user/login</AppDomain>
     <AppDomain>https://www.linkedin.com/uas/oauth/authorize</AppDomain>
+    <AppDomain>http://uprince-dev.pronovix.net/</AppDomain>
+    <AppDomain>http://uprince-dev.pronovix.net</AppDomain>
+    <AppDomain>https://uprinceworddev.azurewebsites.net</AppDomain>
     <AppDomain>https://plaza.uprince.com</AppDomain>
     <AppDomain>https://uprinceworddev.azurewebsites.net</AppDomain>
     <AppDomain>https://uprince-dev.pronovix.net/oauth2/authorize</AppDomain>
@@ -110,6 +113,22 @@
                     <SourceLocation resid="residUnitConverterUrl" />
                   </Action>
                 </Control>
+                <Control xsi:type="Button" id="Contoso.Button2Id1">
+                  <Label resid="residLabel2" />
+                  <Supertip>
+                    <Title resid="residLabel" />
+                    <Description resid="residToolTip" />
+                  </Supertip>
+                  <Icon>
+                    <bt:Image size="16" resid="Contoso.TaskpaneButton.Icon.16" />
+                    <bt:Image size="32" resid="Contoso.TaskpaneButton.Icon.32" />
+                    <bt:Image size="80" resid="Contoso.TaskpaneButton.Icon.80" />
+                  </Icon>
+                  <Action xsi:type="ExecuteFunction">
+                    <!--Name of the function to call. This function needs to exist in the global DOM namespace of the function file-->
+                    <FunctionName>writeText</FunctionName>
+                  </Action>
+                </Control>
               </Group>
             </OfficeTab>
           </ExtensionPoint>
@@ -129,7 +148,7 @@
         <bt:Image id="Contoso.FunctionButton.Icon" DefaultValue="https://i.imgur.com/qDujiX0.png" />
       </bt:Images>
       <bt:Urls>
-        <bt:Url id="residDesktopFuncUrl" DefaultValue="https://uprinceexceldev.azurewebsites.net/addin/home/home.html">
+        <bt:Url id="residDesktopFuncUrl" DefaultValue="https://uprinceexceldev.azurewebsites.net/addin/home/functionfile.html">
           <bt:Override Locale="ja-jp" Value="https://uprinceexceldev.azurewebsites.net/addin/home/home.html" />
         </bt:Url>
         <bt:Url id="residUnitConverterUrl" DefaultValue="https://uprinceexceldev.azurewebsites.net/addin/home/home.html">

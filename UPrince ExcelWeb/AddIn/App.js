@@ -129,7 +129,10 @@ var app = (function () {
 
     function formatDate3(date) {
         if (date == null || date == 0) return null;
-        else return new Date((date - (25567 + 2)) * 86400 * 1000)
+        else {
+            var date = new Date((date - (25567 + 2)) * 86400 * 1000);
+            return date.getFullYear + "-" + (date.getMonth + 1) + "-" + date.getDate;
+        }
     };
 
     //if date is asked in form yyyy-mm-dd
@@ -233,9 +236,9 @@ var app = (function () {
                 var rangeAddress = range.substring(range.indexOf('!') + 1);
                 //var rowCounts = rangeAddress.substring(1);
                 //app.showNotification(rangeAddress)
-                if (rangeAddress != "A2:J2") {
+                if (rangeAddress != "A2:J2" && ctx.workbook.tables.getItem("DailyLog").rows.load("values").items[0].values[0][1] != '') {
                     deleteTable(name);
-                    deleteTable(name);
+                    app.showNotification(ctx.workbook.tables.getItem("DailyLog").rows.load("values").items[0].values[0][1]);
                 }
                 else if (localStorage.getItem("dailyLog") == "true") {
                     dailyLogGET();
@@ -344,6 +347,7 @@ var app = (function () {
                         matrix[i][7] = isNull(str.dailyLogListViewModel[i].activityType);
                         matrix[i][8] = isNull(str.dailyLogListViewModel[i].time);
                         matrix[i][9] = isNull(str.dailyLogListViewModel[i].energy);
+                        //app.showNotification(matrix[i].toString())
                         //matrix[i][6] = isNull(str[i].Version);
                         //localStorage.setItem("ParentId" + str[i].Id, str[i].ParentId);
                     }
@@ -360,9 +364,11 @@ var app = (function () {
                         var line = [1];
                         line[0] = matrix[i];
                         tableRows.add(null, line);
+
                     };
                     return ctx.sync().then(function () {
                         showMessage("Success! My monthly expense table created! Select the arrow button to see how to remove the table.");
+                        storeLineDaily(matrix[i]);
                     })
                      .catch(function (error) {
                          showMessage(JSON.stringify(error));
@@ -452,50 +458,16 @@ var app = (function () {
                 .then(function () {
                     var DlId = localStorage.getItem('DlId');
                     var projectId = localStorage.getItem('projectId');
-                    var urlProject = host + '/api/DailyLog/PostDailyLogHeader';
-                    var urlProject2 = host + '/api/DailyLog/PostDailyLogInvolvedTiming';
                     for (var i = 0; i < rows.items.length; i++) {
-                        //app.showNotification(rows.items[1].values[0][1]);
-                        if (rows.items[i].values[0][2] == null || rows.items[i].values[0][2] == "") {
-                            //app.showNotification('No id');
-                            publishNewDaily(rows.items[i], i);
+                        var row = rows.items[i];
+                        if (isNewDaily(row)) {
+                            commitNewDaily(row, i);
                         }
                         else {
-                            var dataEmail = {
-                                "id": rows.items[i].values[0][2],
-                                "projectId": localStorage.getItem("dailyLogProject" + rows.items[i].values[0][0]),
-                                "activityTypeId": isActivityType(rows.items[i].values[0][7]),
-                                "title": isNull(rows.items[i].values[0][1]),
-                                "order": "0",
-                                "coreUserEmail": localStorage.getItem("email"),
-                                "authorEmail": localStorage.getItem("email"),
-                                "context": localStorage.getItem("dailyLogContext" + rows.items[i].values[0][3]),
-                                "energy": isEnergy(rows.items[i].values[0][9])
-                            };
-                            $.ajax({
-                                type: "POST",
-                                url: urlProject,
-                                dataType: "json",
-                                async: false,
-                                contentType: "application/json; charset=utf-8",
-                                data: JSON.stringify(dataEmail),
-                            })
-                            var dataEmail2 = {
-                                "dailyLogId": rows.items[i].values[0][2],
-                                "responsible": localStorage.getItem('dailyLogUsers' + rows.items[i].values[0][6]),
-                                "responseStatus": isResponseStatus(rows.items[i].values[0][5]),
-                                "targetDate": formatDate3(rows.items[i].values[0][4]),
-                                "time": isTime(rows.items[i].values[0][8])
-                            };
-                            $.ajax({
-                                type: "POST",
-                                url: urlProject2,
-                                dataType: "json",
-                                contentType: "application/json; charset=utf-8",
-                                data: JSON.stringify(dataEmail2),
-                            });
+                            if (editedLine(row)) {
+                                commitUpdateDaily(row);
+                            }
                         };
-
                     }
                 })
                 .then(ctx.sync)
@@ -563,7 +535,7 @@ var app = (function () {
         else return null;
     };
 
-    function publishNewDaily(line, i) {
+    function commitNewDaily(line, i) {
         var email = localStorage.getItem("email");
         var urlProject = host + '/api/DailyLog/PostDailyLogHeader';
         var urlProject2 = host + '/api/DailyLog/PostDailyLogInvolvedTiming';
@@ -605,5 +577,67 @@ var app = (function () {
         })
     };
 
+    function commitUpdateDaily(line) {
+        //app.showNotification(line.values[0].toString());
+        var urlProject = host + '/api/DailyLog/PostDailyLogHeader';
+        var urlProject2 = host + '/api/DailyLog/PostDailyLogInvolvedTiming';
+        var dataEmail = {
+            "id": line.values[0][2],
+            "projectId": localStorage.getItem("dailyLogProject" + line.values[0][0]),
+            "activityTypeId": isActivityType(line.values[0][7]),
+            "title": isNull(line.values[0][1]),
+            "order": "0",
+            "coreUserEmail": localStorage.getItem("email"),
+            "authorEmail": localStorage.getItem("email"),
+            "context": localStorage.getItem("dailyLogContext" + line.values[0][3]),
+            "energy": isEnergy(line.values[0][9])
+        };
+        $.ajax({
+            type: "POST",
+            url: urlProject,
+            dataType: "json",
+            contentType: "application/json; charset=utf-8",
+            data: JSON.stringify(dataEmail),
+        })
+        var dataEmail2 = {
+            "dailyLogId": line.values[0][2],
+            "responsible": localStorage.getItem('dailyLogUsers' + line.values[0][6]),
+            "responseStatus": isResponseStatus(line.values[0][5]),
+            "targetDate": formatDate3(line.values[0][4]),
+            "time": isTime(line.values[0][8])
+        };
+        line.values[0][4] = "";
+        $.ajax({
+            type: "POST",
+            url: urlProject2,
+            dataType: "json",
+            contentType: "application/json; charset=utf-8",
+            data: JSON.stringify(dataEmail2),
+        });
+        //app.showNotification(line.values[0].toString());
+    };
+
+    function isNewDaily(line) {
+        if (line.values[0][2] == null || line.values[0][2] == "") return true;
+        else return false;
+    }
+
+    function storeLineDaily(line) {
+        line[4] = "";
+        localStorage.setItem("line" + line[2], line.toString());
+        //app.showNotification(line.toString());
+    }
+
+    function editedLine(line) {
+        var oldLine = localStorage.getItem("line" + line.values[0][2]);
+        app.showNotification(line.values[0][4]);
+        line.values[0][4] = "";
+        //app.showNotification(oldLine + " / " + line.values[0].toString());
+        if (line.values[0].toString() != oldLine) {
+            //app.showNotification("edited")
+            return true;
+        }
+        else return false;
+    }
     return app;
 })();

@@ -120,6 +120,7 @@
     <Content Include="AddIn\product-description-page.html" />
     <Content Include="AddIn\project-menu.html" />
     <Content Include="AddIn\project-page.html" />
+    <Content Include="AddIn\snippet.js" />
     <Content Include="Content\angular-loading-bar\loading-bar.css" />
     <Content Include="Content\assets\bootstrap\css\bootstrap-theme.css" />
     <Content Include="Content\assets\bootstrap\css\bootstrap-theme.min.css" />

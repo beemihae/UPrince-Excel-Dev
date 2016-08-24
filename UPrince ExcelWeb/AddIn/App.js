@@ -36,7 +36,7 @@ var app = (function () {
             //deleteTable('ProductDescription');
             localStorage.setItem("dailyLog", "true");
             deleteTable('DailyLog');
-            
+
 
         });
 
@@ -138,7 +138,8 @@ var app = (function () {
         if (date2 == null || date2 == 0) return null;
         else {
             var date = new Date((date2 - (25567 + 2)) * 86400 * 1000);
-            return date.getFullYear() + "-" + (date.getMonth() + 1) + "-" + date.getDate();
+            
+            return formatDate(date.toJSON());
         }
     };
 
@@ -267,7 +268,7 @@ var app = (function () {
                 console.log("Debug info: " + JSON.stringify(error.debugInfo));
             }
         });
-        
+
         Excel.run(function (ctx) {
             var range = ctx.workbook.worksheets.getItem(localStorage.getItem("sheetName")).getRange(localStorage.getItem("rangeAddress"));
             var range2 = ctx.workbook.worksheets.getItem(localStorage.getItem("sheetName2")).getRange(localStorage.getItem("rangeAddress2"));
@@ -415,6 +416,7 @@ var app = (function () {
                         matrix[i][1] = isNull(str.dailyLogListViewModel[i].activity);
                         matrix[i][2] = isNull(str.dailyLogListViewModel[i].identifier);
                         matrix[i][3] = isNull(str.dailyLogListViewModel[i].atContext);
+                        //matrix[i][4] = str.dailyLogListViewModel[i].targetDate;
                         matrix[i][4] = formatDate(str.dailyLogListViewModel[i].targetDate);
                         matrix[i][5] = isNull(str.dailyLogListViewModel[i].responsibleStatus);
                         matrix[i][6] = isNull(str.dailyLogListViewModel[i].responsible);

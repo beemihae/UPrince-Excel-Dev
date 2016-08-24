@@ -54,6 +54,7 @@
     <Content Include="robots.txt" />
     <Content Include="UPrince ExcelManifest\UPrince Excel.xml">
       <OpcRelationship>manifest-oemanifest</OpcRelationship>
+      <SubType>Designer</SubType>
     </Content>
   </ItemGroup>
   <ItemGroup>

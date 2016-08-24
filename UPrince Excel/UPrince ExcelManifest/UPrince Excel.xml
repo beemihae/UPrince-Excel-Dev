@@ -99,9 +99,9 @@
                 </Icon>
                 <!--Control. It can be of type "Button" or "Menu" -->
                 <Control xsi:type="Button" id="Contoso.Button3Id1">
-                  <Label resid="residLabel3" />
+                  <Label resid="residLabel1" />
                   <Supertip>
-                    <Title resid="residLabel" />
+                    <Title resid="residLabel2" />
                     <Description resid="residToolTip" />
                   </Supertip>
                   <Icon>
@@ -113,22 +113,37 @@
                     <SourceLocation resid="residUnitConverterUrl" />
                   </Action>
                 </Control>
-                <Control xsi:type="Button" id="Contoso.Button2Id1">
-                  <Label resid="residLabel2" />
+               <Control xsi:type="Button" id="Contoso.Button2Id1">
+                  <Label resid="residLabel3" />
                   <Supertip>
-                    <Title resid="residLabel" />
+                    <Title resid="residLabel4" />
                     <Description resid="residToolTip" />
                   </Supertip>
                   <Icon>
-                    <bt:Image size="16" resid="Contoso.TaskpaneButton.Icon.16" />
+                      <bt:Image size="16" resid="Contoso.TaskpaneButton.Icon.16" />
                     <bt:Image size="32" resid="Contoso.TaskpaneButton.Icon.32" />
                     <bt:Image size="80" resid="Contoso.TaskpaneButton.Icon.80" />
                   </Icon>
                   <Action xsi:type="ExecuteFunction">
-                    <!--Name of the function to call. This function needs to exist in the global DOM namespace of the function file-->
-                    <FunctionName>writeText</FunctionName>
+                    <FunctionName>refresh</FunctionName>
                   </Action>
                 </Control>
+              <Control xsi:type="Button" id="Contoso.Button1Id1">
+                  <Label resid="residLabel5" />
+                  <Supertip>
+                    <Title resid="residLabel6" />
+                    <Description resid="residToolTip" />
+                  </Supertip>
+                  <Icon>
+                      <bt:Image size="16" resid="Contoso.TaskpaneButton.Icon.16" />
+                    <bt:Image size="32" resid="Contoso.TaskpaneButton.Icon.32" />
+                    <bt:Image size="80" resid="Contoso.TaskpaneButton.Icon.80" />
+                  </Icon>
+                  <Action xsi:type="ExecuteFunction">
+                    <FunctionName>commit</FunctionName>
+                  </Action>
+                </Control>
+             
               </Group>
             </OfficeTab>
           </ExtensionPoint>
@@ -159,24 +174,28 @@
       </bt:Urls>
       <bt:ShortStrings>
         <!-- ShortStrings max characters==125 -->
-        <bt:String id="residLabel" DefaultValue="Get Data">
+        <bt:String id="residLabel1" DefaultValue="Login">
           <bt:Override Locale="ja-jp" Value="JA-JP Multiple Buttons" />
         </bt:String>
-        <bt:String id="residLabel2" DefaultValue="Save Data">
+        <bt:String id="residLabel2" DefaultValue="Login">
           <bt:Override Locale="ja-jp" Value="JA-JP Multiple Buttons" />
         </bt:String>
-        <bt:String id="residLabel3" DefaultValue="Load Projects">
+        <bt:String id="residLabel3" DefaultValue="Refresh">
           <bt:Override Locale="ja-jp" Value="JA-JP Multiple Buttons" />
         </bt:String>
         <bt:String id="residLabel4" DefaultValue="Projects">
           <bt:Override Locale="ja-jp" Value="JA-JP Multiple Buttons" />
         </bt:String>
-        <bt:String id="residLabel5" DefaultValue="Another Command">
+        <bt:String id="residLabel5" DefaultValue="Commit">
+          <bt:Override Locale="ja-jp" Value="JA-JP Multiple Buttons" />
+        </bt:String>
+        <bt:String id="residLabel6" DefaultValue="Commit">
           <bt:Override Locale="ja-jp" Value="JA-JP Multiple Buttons" />
         </bt:String>
         <bt:String id="Contoso.GetStarted.Title" DefaultValue="UPrince Loaded Successfully">
           <bt:Override Locale="ja-jp" Value="JA-JP Get Started Title" />
         </bt:String>
+        
 
       </bt:ShortStrings>
       <bt:LongStrings>

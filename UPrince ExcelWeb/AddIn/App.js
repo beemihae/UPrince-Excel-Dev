@@ -35,14 +35,13 @@ var app = (function () {
         $(document).on("click", "#Refresh", function () {
             //deleteTable('ProductDescription');
             localStorage.setItem("dailyLog", "true");
+
             deleteTable('DailyLog');
 
 
         });
 
         $(document).on("click", "#Publish", function () {
-            //publishRiskRegister();
-            //publishProductDescription();
             publishDailyLog();
         });
 
@@ -89,6 +88,11 @@ var app = (function () {
     function isNull(param) {
         if (param == null) return '';
         else return param;
+    }
+
+    function isNull2(param) {
+        if (param == "0" || param == "" || param == " ") return null;
+        else return param
     }
 
     function isZero(param) {
@@ -138,7 +142,7 @@ var app = (function () {
         if (date2 == null || date2 == 0) return null;
         else {
             var date = new Date((date2 - (25567 + 2)) * 86400 * 1000);
-            
+
             return formatDate(date.toJSON());
         }
     };
@@ -311,7 +315,7 @@ var app = (function () {
                 var rangeAddress = range.substring(range.indexOf('!') + 1);
                 //var rowCounts = rangeAddress.substring(1);
                 //app.showNotification(rangeAddress)
-                if (rangeAddress != "A2:J2" && ctx.workbook.tables.getItem("DailyLog").rows.load("values").items[0].values[0][1] != '') {
+                if (rangeAddress != "A2:K2" && ctx.workbook.tables.getItem("DailyLog").rows.load("values").items[0].values[0][1] != '') {
                     deleteTable(name);
                     app.showNotification(ctx.workbook.tables.getItem("DailyLog").rows.load("values").items[0].values[0][1]);
                 }
@@ -331,7 +335,7 @@ var app = (function () {
     function dailyLogGET() {
         localStorage.setItem("dailyLog", "false")
         //deleteTable("DailyLog");
-        var projectId = localStorage.getItem('projectId');
+        //var projectId = localStorage.getItem('projectId');
         var userEmail = localStorage.getItem('email');
         var urlProject = host + "/api/DailyLog/GetDailyLog";
         var dataEmail =
@@ -405,16 +409,18 @@ var app = (function () {
         })
             .done(function (str) {
                 //app.showNotification(str.dailyLogListViewModel.length);
-                getDailyLog(str.dailyLogListViewModel[1].identifier);
+                getDailyLog(str.dailyLogListViewModel[1].id);
                 var DlId = [str.dailyLogListViewModel.length];
                 if (str.dailyLogListViewModel.length > 0) {
                     var matrix = [str.dailyLogListViewModel.length];
                     for (var i = 0; i < str.dailyLogListViewModel.length; i++) {
-                        matrix[i] = [10];
-                        DlId[i] = str.dailyLogListViewModel[i].identifier;
+                        matrix[i] = [11];
+                        DlId[i] = str.dailyLogListViewModel[i].id;
                         matrix[i][0] = isNull(str.dailyLogListViewModel[i].project);
-                        matrix[i][1] = isNull(str.dailyLogListViewModel[i].activity);
-                        matrix[i][2] = isNull(str.dailyLogListViewModel[i].identifier);
+                        var activity = isNull(str.dailyLogListViewModel[i].activity);
+                        matrix[i][1] =activity;
+                        var identifier = isNull(str.dailyLogListViewModel[i].id);
+                        matrix[i][10] = identifier;
                         matrix[i][3] = isNull(str.dailyLogListViewModel[i].atContext);
                         //matrix[i][4] = str.dailyLogListViewModel[i].targetDate;
                         matrix[i][4] = formatDate(str.dailyLogListViewModel[i].targetDate);
@@ -423,13 +429,17 @@ var app = (function () {
                         matrix[i][7] = isNull(str.dailyLogListViewModel[i].activityType);
                         matrix[i][8] = isNull(str.dailyLogListViewModel[i].time);
                         matrix[i][9] = isNull(str.dailyLogListViewModel[i].energy);
+                        matrix[i][2] = '=HYPERLINK("https://uprinceuat.azurewebsites.net/Home/Index/gdt/daily-log/description/"&[@Column1],[@Column1])'
+                        //matrix[i][10] = 'hello';
                         storeLineDaily(matrix[i]);
+                        //GTD > excel > Hyperlink 
+
                         //app.showNotification(matrix[i].toString())
                         //matrix[i][6] = isNull(str[i].Version);
                         //localStorage.setItem("ParentId" + str[i].Id, str[i].ParentId);
                     }
                 } else {
-                    var matrix = [["", "", "", "", "", "", "", "", "", ""]]
+                    var matrix = [["", "", "", "", "", "", "", "", "", "",""]]
                 };
 
                 localStorage.setItem("DlId", DlId);
@@ -490,9 +500,9 @@ var app = (function () {
                  addValues("Status", status, ctx);
                  var type = [["Problem"], ["Action"], ["Event"], ["Comment"], ["Decision"], ["Reference"]];
                  addValues("Type", type, ctx);
-                 var time = [["5 min"], ["15 min"], ["30 min"], ["1 hr"], ["2 hr"], ["4 hr"], ["8 hr"]]/*[[1], [2], [1], [2], [1]] //str.impact[0].State*/;
+                 var time = [["5 min"], ["15 min"], ["30 min"], ["1 hr"], ["2 hr"], ["4 hr"], ["8 hr"],["' -"]]/*[[1], [2], [1], [2], [1]] //str.impact[0].State*/;
                  addValues("Time", time, ctx);
-                 var energy = [["Mild"], ["Reasonable"], ["Demanding"], ["Very Demanding"], ["Extreme"]]/*[[1], [2], [1], [2], [1]] //str.impact[0].State*/;
+                 var energy = [["Mild"], ["Reasonable"], ["Demanding"], ["Very Demanding"], ["Extreme"],["' -"]]/*[[1], [2], [1], [2], [1]] //str.impact[0].State*/;
                  addValues("Energy", energy, ctx);
 
                  if (Object.keys(str.project).length != 0) {
@@ -577,7 +587,7 @@ var app = (function () {
         Excel.run(function (ctx) {
             var count = (range + 2);
             //app.showNotification(typeof(range) + "  "+ typeof(range + 1));
-            var excelRange = "C" + count + ":C" + count;
+            var excelRange = "K" + count + ":K" + count;
             //app.showNotification(excelRange);
             ctx.workbook.worksheets.getItem('DailyLog').getRange(excelRange).values = ("" + id)/*[[1], [2], [1], [2], [1]] //str.impact[0].State*/;
 
@@ -634,14 +644,14 @@ var app = (function () {
         var urlProject = host + '/api/DailyLog/PostDailyLogHeader';
         var urlProject2 = host + '/api/DailyLog/PostDailyLogInvolvedTiming';
         var dataEmail = {
-            "id": line.values[0][2],
-            "projectId": localStorage.getItem("dailyLogProject" + line.values[0][0]),
+            "id": isNull2(line.values[0][10]),
+            "projectId": projectId(line.values[0][0], line, 'commitNew', i),
             "activityTypeId": isActivityType(line.values[0][7]),
             "title": isNull(line.values[0][1]),
             "order": "0",
             "coreUserEmail": email,
             "authorEmail": email,
-            "context": localStorage.getItem("dailyLogContext" + line.values[0][3]),
+            "context": contextId(line.values[0][3], line, 'commitNew', i),
             "energy": isEnergy(line.values[0][9])
         };
         $.ajax({
@@ -676,14 +686,14 @@ var app = (function () {
         var urlProject = host + '/api/DailyLog/PostDailyLogHeader';
         var urlProject2 = host + '/api/DailyLog/PostDailyLogInvolvedTiming';
         var dataEmail = {
-            "id": line.values[0][2],
-            "projectId": localStorage.getItem("dailyLogProject" + line.values[0][0]),
+            "id": isNull2(line.values[0][10]),
+            "projectId": projectId(line.values[0][0], line, 'commitUpdate', ""),
             "activityTypeId": isActivityType(line.values[0][7]),
             "title": isNull(line.values[0][1]),
             "order": "0",
             "coreUserEmail": localStorage.getItem("email"),
             "authorEmail": localStorage.getItem("email"),
-            "context": localStorage.getItem("dailyLogContext" + line.values[0][3]),
+            "context": contextId(line.values[0][3], line, 'commitUpdate', ""),
             "energy": isEnergy(line.values[0][9])
         };
         $.ajax({
@@ -694,7 +704,7 @@ var app = (function () {
             data: JSON.stringify(dataEmail),
         })
         var dataEmail2 = {
-            "dailyLogId": line.values[0][2],
+            "dailyLogId": isNull2(line.values[0][10]),
             "responsible": localStorage.getItem('dailyLogUsers' + line.values[0][6]),
             "responseStatus": isResponseStatus(line.values[0][5]),
             "targetDate": formatDate3(line.values[0][4]),
@@ -713,7 +723,7 @@ var app = (function () {
     };
 
     function isNewDaily(line) {
-        if (line.values[0][2] == null || line.values[0][2] == "") return true;
+        if (line.values[0][10] == null || line.values[0][10] == "") return true;
         else return false;
     }
 
@@ -725,7 +735,7 @@ var app = (function () {
     }
 
     function editedLine(line) {
-        var oldLine = localStorage.getItem("line" + line.values[0][2]);
+        var oldLine = localStorage.getItem("line" + line.values[0][10]);
         var temporary = line.values[0][4];
         line.values[0][4] = formatDate3(line.values[0][4]);
         //app.showNotification(oldLine + " / " + line.values[0].toString());
@@ -739,5 +749,85 @@ var app = (function () {
         };
     }
 
+    function projectId(project, line, type, i) {
+        //app.showNotification(localStorage.getItem("dailyLogProject" + project) == null);
+        if (localStorage.getItem("dailyLogProject" + project) == null) {
+            var dataEmail = {
+                "id": null,
+                "title": project,
+                "status": "1",
+                "statusStyle": "green-border",
+                "statusIcon": "green-icon.png",
+                "projectOwnerId": localStorage.getItem("uId"),
+                "pmEmail": localStorage.getItem("email"),
+                "customer": "",
+                "startDate": null,
+                "expectedEndDate": null,
+                "endDate": null,
+                "estimatedBudget": null,
+                "budget": null,
+                "toleranceStatus": null,
+                "selectedToleranceStatus": null,
+                "workflowStatus": null,
+                "projectBusinessId": "",
+                "selectedProjectTypeId": null,
+                "selectedProjectManagementLevelId": 3,
+                "isPublic": false,
+                "createdDateTime": null
+            };
+            var urlProject = host + "/api/project/PostProject";
+            $.ajax({
+                type: "POST",
+                url: urlProject,
+                async: false,
+                dataType: "json",
+                contentType: "application/json; charset=utf-8",
+                data: JSON.stringify(dataEmail),
+            })
+            .done(function (result) {
+                localStorage.setItem("dailyLogProject" + project, "" + result);
+                app.showNotification("" + result);
+                if (type == "commitUpdate") { commitUpdateDaily(line) }
+                else commitNewDaily(line, i)
+                return "" + result;
+            })
+        }
+        else return localStorage.getItem("dailyLogProject" + project);
+    };
+
+    function contextId(context, line, type, i) {
+        var userEmail = localStorage.getItem("email");
+        //app.showNotification(localStorage.getItem("dailyLogProject" + project) == null);
+        if (localStorage.getItem("dailyLogContext" + context) == null) {
+            var dataEmail = {
+                "id": null,
+                "description": context,
+                "coreUserEmail": userEmail,
+            
+            };
+            var urlProject = host + "/api/DailyLog/PostDailyLogContext";
+            $.ajax({
+                type: "POST",
+                url: urlProject,
+                async: false,
+                dataType: "json",
+                contentType: "application/json; charset=utf-8",
+                data: JSON.stringify(dataEmail),
+            })
+            .done(function (result) {
+                localStorage.setItem("dailyLogContext" + context, "" + result);
+                app.showNotification("New @Context added");
+
+                if (type == "commitUpdate") {
+                    commitUpdateDaily(line);
+                    commitUpdateDaily(line);
+                }
+                else commitNewDaily(line, i);
+                app.showNotification(typeof (""+result))
+                return ("" + result);
+            })
+        }
+        else return localStorage.getItem("dailyLogContext" + context);
+    };
     return app;
 })();

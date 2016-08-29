@@ -166,7 +166,8 @@
         <bt:Url id="residDesktopFuncUrl" DefaultValue="https://uprinceexceldev.azurewebsites.net/addin/home/functionfile.html">
           <bt:Override Locale="ja-jp" Value="https://uprinceexceldev.azurewebsites.net/addin/home/home.html" />
         </bt:Url>
-        <bt:Url id="residUnitConverterUrl" DefaultValue="https://uprinceexceldev.azurewebsites.net/addin/home/home.html">
+        <!--<bt:Url id="residUnitConverterUrl" DefaultValue="https://uprinceexceldev.azurewebsites.net/addin/home/home.html">-->
+        <bt:Url id="residUnitConverterUrl" DefaultValue="https://uprinceexceldev.azurewebsites.net/addin/addPerson.html">
         </bt:Url>
         <!--LearnMore URL currently not used -->
         <bt:Url id="Contoso.GetStarted.LearnMoreUrl" DefaultValue="https://odsample.azurewebsites.net/Pages/GetStarted.html">
